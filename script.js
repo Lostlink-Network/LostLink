@@ -102,6 +102,7 @@ function cleanText(value) {
 }
 
 
+
 // ========================================
 // SEARCH
 // ========================================
@@ -202,38 +203,9 @@ async function searchItem() {
                             ${escapeHTML(name)}
                         </strong>
 
-                        <br><br>
-
-                        ${escapeHTML(description)}
-
-                        <br>
-
-                        Location:
-                        ${escapeHTML(location)}
-
-                        <br>
-
-                        Date:
-                        ${escapeHTML(date)}
-
                         ${
                             photo
                                 ? `
-                                    <br><br>
-
-                                    <img
-                                        src="${escapeHTML(photo)}"
-                                        alt="Item photo"
-                                        loading="lazy"
-                                        style="
-                                            max-width:300px;
-                                            width:100%;
-                                            height:auto;
-                                            border-radius:8px;
-                                        "
-                                        onerror="this.style.display='none';"
-                                    >
-
                                     <br>
 
                                     <a
@@ -246,6 +218,21 @@ async function searchItem() {
                                 `
                                 : ""
                         }
+
+                        <br><br>
+
+                        Description:
+                        ${escapeHTML(description)}
+
+                        <br>
+
+                        Location:
+                        ${escapeHTML(location)}
+
+                        <br>
+
+                        Date:
+                        ${escapeHTML(date)}
 
                     </div>
 
@@ -265,6 +252,7 @@ async function searchItem() {
             "Unable to search the items right now.";
     }
 }
+
 
 
 // ========================================
