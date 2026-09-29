@@ -587,6 +587,9 @@ async function loadLatestItems() {
                 cleanText(item["Date"]) ||
                 "Unknown";
 
+            const photo =
+                cleanText(item["Photo"]);
+
             if (targetLang === "ja") {
 
                 itemName =
@@ -630,7 +633,23 @@ async function loadLatestItems() {
                         ${escapeHTML(itemName)}
                     </strong>
 
-                    <br><br>
+                    ${
+                        photo
+                            ? `
+                                <br>
+
+                                <a
+                                    href="${escapeHTML(photo)}"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                >
+                                    View Photo
+                                </a>
+                            `
+                            : ""
+                    }
+
+                    <br>
 
                     ${descLabel}
                     ${escapeHTML(description)}
