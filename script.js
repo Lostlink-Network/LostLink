@@ -2,9 +2,9 @@
 // PRJ LOSTLINK - MAIN JAVASCRIPT
 // ========================================
 
-// ========================================
-// PAGE SCROLL POSITION
-// ========================================
+// ========L POSITION
+// ==========================================
+// PAGE SCROL==============================
 
 if ("scrollRestoration" in history) {
     history.scrollRestoration = "manual";
@@ -42,46 +42,54 @@ function saveItems(items) {
 
 async function getGoogleSheetItems() {
 
-    const cachedData =
-        sessionStorage.getItem("lostlinkSheetCache");
+    // Add a timestamp to prevent browser/CDN caching.
+    const cacheBuster =
+        "?t=" + Date.now();
 
-    if (cachedData) {
-        return JSON.parse(cachedData);
-    }
-
-    const response = await fetch(sheetURL);
+    const response =
+        await fetch(
+            sheetURL + cacheBuster,
+            {
+                cache: "no-store"
+            }
+        );
 
     if (!response.ok) {
-        throw new Error("Could not load Google Sheet.");
+        throw new Error(
+            "Could not load Google Sheet."
+        );
     }
 
-    const csv = await response.text();
+    const csv =
+        await response.text();
 
-    const rows = parseCSV(csv);
+    const rows =
+        parseCSV(csv);
 
     if (rows.length < 2) {
         return [];
     }
 
-    const headers = rows[0].map(header =>
-        header.trim()
-    );
+    const headers =
+        rows[0].map(header =>
+            header.trim()
+        );
 
-    const items = rows.slice(1).map(row => {
+    const items =
+        rows.slice(1).map(row => {
 
-        let item = {};
+            const item = {};
 
-        headers.forEach((header, index) => {
-            item[header] = row[index] || "";
+            headers.forEach(
+                (header, index) => {
+
+                    item[header] =
+                        row[index] || "";
+                }
+            );
+
+            return item;
         });
-
-        return item;
-    });
-
-    sessionStorage.setItem(
-        "lostlinkSheetCache",
-        JSON.stringify(items)
-    );
 
     return items;
 }
