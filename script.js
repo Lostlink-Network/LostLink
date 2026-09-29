@@ -1085,7 +1085,7 @@ const translations = {
             "This System is Powered by",
 
         githubTitle:
-            "Git-Hub (temporary)",
+            "Git-Hub",
 
         warningText:
             "WARNING: This system tend to have technical errors with Google Chrome (MOBILE).",
@@ -1166,7 +1166,7 @@ const translations = {
             "このシステムは次世代の技術で駆動しています",
 
         githubTitle:
-            "GitHub（一時的）",
+            "GitHub",
 
         warningText:
             "警告：このシステムはGoogle Chrome（モバイル）で技術的なエラーが発生します。",
