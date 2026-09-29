@@ -42,56 +42,34 @@ function saveItems(items) {
 
 async function getGoogleSheetItems() {
 
-    // Add a timestamp to prevent browser/CDN caching.
-    const cacheBuster =
-        "?t=" + Date.now();
-
-    const response =
-        await fetch(
-            sheetURL + cacheBuster,
-            {
-                cache: "no-store"
-            }
-        );
+    const response = await fetch(sheetURL);
 
     if (!response.ok) {
-        throw new Error(
-            "Could not load Google Sheet."
-        );
+        throw new Error("Could not load Google Sheet.");
     }
 
-    const csv =
-        await response.text();
+    const csv = await response.text();
 
-    const rows =
-        parseCSV(csv);
+    const rows = parseCSV(csv);
 
     if (rows.length < 2) {
         return [];
     }
 
-    const headers =
-        rows[0].map(header =>
-            header.trim()
-        );
+    const headers = rows[0].map(header =>
+        header.trim()
+    );
 
-    const items =
-        rows.slice(1).map(row => {
+    return rows.slice(1).map(row => {
 
-            const item = {};
+        let item = {};
 
-            headers.forEach(
-                (header, index) => {
-
-                    item[header] =
-                        row[index] || "";
-                }
-            );
-
-            return item;
+        headers.forEach((header, index) => {
+            item[header] = row[index] || "";
         });
 
-    return items;
+        return item;
+    });
 }
 
 
