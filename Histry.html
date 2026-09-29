@@ -3,6 +3,35 @@
 
 <head>
 
+    <script>
+async function checkMaintenance() {
+
+    if (window.location.pathname.endsWith("maintenance.html")) {
+        return;
+    }
+
+    try {
+        const response = await fetch(
+            "maintenance.json?t=" + Date.now(),
+            {
+                cache: "no-store"
+            }
+        );
+
+        const data = await response.json();
+
+        if (data.maintenance === true) {
+            window.location.replace("maintenance.html");
+        }
+
+    } catch (error) {
+        console.log("Maintenance check failed.");
+    }
+}
+
+checkMaintenance();
+</script>
+
     <meta charset="UTF-8">
 
     <meta name="viewport"
@@ -204,6 +233,21 @@
         </p>
 
     </div>
+
+    <hr>
+
+    <div class="info-group">
+
+        <p>
+            <u>Prototype χ:</u>
+        </p>
+
+        <p>
+            Included features: Search, Report, View
+        </p>
+
+    </div>
+
 
     <hr>
 

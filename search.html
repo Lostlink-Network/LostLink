@@ -1,6 +1,36 @@
 <!DOCTYPE html>
 <html>
 <head>
+
+    <script>
+async function checkMaintenance() {
+
+    if (window.location.pathname.endsWith("maintenance.html")) {
+        return;
+    }
+
+    try {
+        const response = await fetch(
+            "maintenance.json?t=" + Date.now(),
+            {
+                cache: "no-store"
+            }
+        );
+
+        const data = await response.json();
+
+        if (data.maintenance === true) {
+            window.location.replace("maintenance.html");
+        }
+
+    } catch (error) {
+        console.log("Maintenance check failed.");
+    }
+}
+
+checkMaintenance();
+</script>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Search - PRJ LostLink</title>

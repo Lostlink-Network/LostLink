@@ -16,6 +16,55 @@ window.addEventListener("pageshow", function () {
 
 
 // ========================================
+// MAINTENANCE MODE
+// ========================================
+
+async function checkMaintenance() {
+
+    const page =
+        window.location.pathname
+            .split("/")
+            .pop()
+            .toLowerCase();
+
+    if (
+        page === "admin-dashboard.html" ||
+        page === "maintenance.html"
+    ) {
+        return;
+    }
+
+    try {
+
+        const response = await fetch(
+            "./maintenance.json?t=" + Date.now(),
+            {
+                cache: "no-store"
+            }
+        );
+
+        const data =
+            await response.json();
+
+        if (data.maintenance === true) {
+
+            window.location.href =
+                "./maintenance.html";
+        }
+
+    } catch (error) {
+
+        console.log(
+            "Maintenance check failed:",
+            error
+        );
+    }
+}
+
+checkMaintenance();
+
+
+// ========================================
 // GOOGLE SHEET
 // ========================================
 

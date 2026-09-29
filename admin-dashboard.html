@@ -6,7 +6,7 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>LostLink NTW</title>
+<title>LostLink Admin Panel</title>
 
 <style>
 
@@ -14,137 +14,114 @@
         box-sizing: border-box;
     }
 
-    html {
-        margin: 0;
-        padding: 0;
-        width: 100%;
-        min-width: 100%;
-        overflow-x: hidden;
-        scroll-behavior: auto;
-    }
-
+    html,
     body {
         margin: 0;
         padding: 16px;
         width: 100%;
-        min-width: 100%;
-        min-height: 100vh;
-
+        min-height: 100%;
         font-family: Arial, sans-serif;
         font-size: 16px;
         line-height: 1.5;
-
-        text-align: left;
-
         overflow-x: hidden;
-        overflow-y: auto;
-
-        display: block;
-    }
-
-    /* Main page content uses the entire available width */
-
-    h1,
-    h2,
-    p,
-    hr,
-    #latestItems,
-    .version-label {
-        max-width: none;
-        width: 100%;
     }
 
     h1 {
         margin: 0 0 4px 0;
-        font-size: 2em;
-        font-weight: 700;
     }
 
     h2 {
-        margin: 20px 0 10px 0;
-        font-weight: 700;
+        margin-top: 20px;
     }
 
-    p {
-        margin: 10px 0;
-    }
-
-    hr {
-        margin: 20px 0;
-        border: 0;
-        border-top: 1px solid;
-    }
-
-    a {
+    button {
+        padding: 10px 16px;
+        margin: 5px 5px 5px 0;
         font-size: 16px;
+        cursor: pointer;
     }
 
-    #latestItems {
+    #pendingItems {
         width: 100%;
     }
 
-    #latestItems div {
-        width: 100%;
-    }
-
-    .version-label {
-        margin-top: 30px;
-        padding: 10px 0;
-        text-align: center;
-        font-size: 12px;
-        opacity: 0.6;
-    }
-
-    @media (max-width: 600px) {
-
-        body {
-            padding: 12px;
-            font-size: 16px;
-        }
-
-        h1 {
-            font-size: 1.8em;
-        }
-
-        h2 {
-            font-size: 1.4em;
-        }
-
-        a {
-            font-size: 16px;
-        }
-
+    #maintenanceStatus {
+        margin-top: 10px;
+        font-weight: bold;
     }
 
 </style>
-
-<script>
-
-    // Prevent browser from restoring an old scroll position
-
-    if ("scrollRestoration" in history) {
-        history.scrollRestoration = "manual";
-    }
-
-</script>
 
 </head>
 
 <body>
 
-<h1>LostLink Network System</h1>
+<h1>LostLink Admin Panel</h1>
 
 <p>Student Lost &amp; Found System</p>
 
 <hr>
 
-<div class="version-label">
+<h2>Admin Tools</h2>
 
-    BETA Prototype 1.0.0
+<button
+    type="button"
+    onclick="window.location.assign('./maintenance.html')">
+    Open Maintenance Page
+</button>
 
-</div>
+<p id="maintenanceStatus">
+    Checking maintenance status...
+</p>
 
-<script src="script.js"></script>
+<hr>
+
+<script>
+
+async function showMaintenanceStatus() {
+
+    try {
+
+        const response = await fetch(
+            "maintenance.json?t=" + Date.now(),
+            {
+                cache: "no-store"
+            }
+        );
+
+        const data = await response.json();
+
+        const status =
+            document.getElementById(
+                "maintenanceStatus"
+            );
+
+        if (data.maintenance === true) {
+
+            status.innerText =
+                "Maintenance Mode: ACTIVE";
+
+        } else {
+
+            status.innerText =
+                "Maintenance Mode: OFF";
+
+        }
+
+    } catch (error) {
+
+        document.getElementById(
+            "maintenanceStatus"
+        ).innerText =
+            "Could not check maintenance status.";
+
+    }
+
+}
+
+showMaintenanceStatus();
+
+</script>
 
 </body>
 
