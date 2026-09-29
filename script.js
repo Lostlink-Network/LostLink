@@ -219,7 +219,7 @@ async function searchItem() {
                                 : ""
                         }
 
-                        <br><br>
+                        <br>
 
                         Description:
                         ${escapeHTML(description)}
