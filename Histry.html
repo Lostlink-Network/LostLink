@@ -1,140 +1,260 @@
 <!DOCTYPE html>
-
-<html>
+<html lang="en">
 
 <head>
 
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
 
-<title>LostLink Network System</title>
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0">
 
-<style>
+    <title>LostLink NTW - System History</title>
 
-    * {
-        box-sizing: border-box;
-    }
+    <style>
 
-    html {
-        scroll-behavior: auto;
-        overflow-anchor: none;
-    }
-
-    body {
-        margin: 0;
-        padding: 16px;
-        width: 100%;
-        overflow-x: hidden;
-        font-family: Arial, sans-serif;
-    }
-
-    @media (max-width: 600px) {
-        body {
-            padding: 12px;
+        * {
+            box-sizing: border-box;
         }
-    }
 
-    .version-label {
-        text-align: center;
-        margin-top: 30px;
-        padding: 10px;
-        font-size: 12px;
-        opacity: 0.6;
-    }
+        html {
+            scroll-behavior: auto;
+            overflow-anchor: none;
+        }
 
-</style>
+        body {
+            margin: 0;
+            padding: 16px;
+            width: 100%;
+            overflow-x: hidden;
+            font-family: Arial, sans-serif;
+        }
 
-<script>
+        @media (max-width: 600px) {
 
-    // Prevent mobile browsers from restoring an old scroll position
-    if ("scrollRestoration" in history) {
-        history.scrollRestoration = "manual";
-    }
+            body {
+                padding: 12px;
+            }
 
-</script>
+        }
+
+        /* ================================
+           TOP BAR
+           ================================ */
+
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+        }
+
+        .nexus {
+            text-align: left;
+        }
+
+        .nexus h1 {
+            margin: 0;
+            line-height: 1.1;
+        }
+
+        /* ================================
+           LANGUAGE BUTTONS
+           ================================ */
+
+        .language-box {
+            display: flex;
+            border: 1px solid black;
+            margin-left: 10px;
+            overflow: hidden;
+        }
+
+        .language-box button {
+            border: none;
+            background: white;
+            color: black;
+            padding: 6px 10px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .language-box button.selected {
+            background: rgba(25, 118, 210, 0.25);
+            color: black;
+        }
+
+        /* ================================
+           INFO GROUPS
+           ================================ */
+
+        .info-group {
+            margin-bottom: 15px;
+        }
+
+        .info-group p {
+            margin: 0;
+        }
+
+        /* ================================
+           VERSION
+           ================================ */
+
+        .version-label {
+            text-align: center;
+            margin-top: 30px;
+            padding: 10px;
+            font-size: 12px;
+            opacity: 0.6;
+        }
+
+    </style>
+
+    <script>
+
+        // Prevent mobile browsers from restoring an old scroll position
+        if ("scrollRestoration" in history) {
+            history.scrollRestoration = "manual";
+        }
+
+    </script>
 
 </head>
 
 <body>
 
-<h1>LostLink NTW</h1>
+    <!-- ================================
+         TOP BAR
+         ================================ -->
 
-<p>System Histry</p>
-<p></p>
-<hr>
-<p><u>Warning: This page only supports English</u></p>
-<hr>
-<div class="info-group">
-    <p><u>V. Prototype:</u></p>
-    <p>Included features: Search, Report</p>
-</div>
+    <div class="top-bar">
 
-<style>
-    .info-group p {
-        margin: 0;
-    }
+        <div class="nexus">
 
-    .info-group + .info-group {
-        margin-top: 15px;
-    }
-</style>
+            <h1 id="pageTitle">
+                LostLink NTW
+            </h1>
 
-<hr>
+        </div>
 
-<div class="info-group">
-    <p><u>Alpha Prototype:</u></p>
-    <p>Included features: Search, Report, View </p>
-</div>
+        <div class="language-box">
 
-<style>
-    h1 {
-        margin-bottom: 0;
-    }
+            <button
+                id="enButton"
+                onclick="setLanguage('EN')">
+                EN
+            </button>
 
-    p {
-        margin-top: 0;
-    }
-</style>
-</div>
+            <button
+                id="jpButton"
+                onclick="setLanguage('JP')">
+                JP
+            </button>
 
-<hr>
-<div class="info-group">
-    <p><u>Beta Prototype 1.0.0:</u></p>
-    <p>Included features: All above and Language option and smoother experience. </p>
-</div>
+        </div>
 
-<hr>
+    </div>
 
-<div class="info-group">
-    <p><u>Official Release Model V.1.0:</u></p>
-    <p>coming soon</p>
-</div>
+    <p>
+        <a
+            id="backHome"
+            href="index.html">
+            ← Back to Home
+        </a>
+    </p>
 
-<hr>
+    <hr>
 
-<p>
-    <a href="index.html">← Back to Home</a>
-</p>
+    <h2 id="pageSubtitle">
+        System History
+    </h2>
 
-<div class="version-label">
-   Beta Prototype 1.0.0
-</div>
+    <p>
+        <u>
+            Warning: This page only supports English
+        </u>
+    </p>
 
-<script src="script.js"></script>
+    <hr>
 
-<script>
+    <!-- ================================
+         PROTOTYPE HISTORY
+         ================================ -->
 
-    // Force the homepage to the top after everything has loaded
-    window.addEventListener("load", function () {
+    <div class="info-group">
 
-        setTimeout(function () {
+        <p>
+            <u>V. Prototype:</u>
+        </p>
 
-            window.scrollTo(0, 0);
+        <p>
+            Included features: Search, Report
+        </p>
 
-        }, 100);
+    </div>
 
-    });
+    <hr>
 
-</script>
+    <div class="info-group">
+
+        <p>
+            <u>Alpha Prototype:</u>
+        </p>
+
+        <p>
+            Included features: Search, Report, View
+        </p>
+
+    </div>
+
+    <hr>
+
+    <div class="info-group">
+
+        <p>
+            <u>Beta Prototype 1.0.0:</u>
+        </p>
+
+        <p>
+            Included features: All above and Language option and smoother experience.
+        </p>
+
+    </div>
+
+    <hr>
+
+    <div class="info-group">
+
+        <p>
+            <u>Official Release Model V.1.0:</u>
+        </p>
+
+        <p>
+            Coming soon
+        </p>
+
+    </div>
+
+    <hr>
+
+    <div class="version-label">
+        Alpha Model
+    </div>
+
+    <script src="script.js"></script>
+
+    <script>
+
+        // Force page to the top after everything has loaded
+        window.addEventListener("load", function () {
+
+            setTimeout(function () {
+
+                window.scrollTo(0, 0);
+
+            }, 100);
+
+        });
+
+    </script>
 
 </body>
 
