@@ -726,172 +726,122 @@ async function loadLatestItems() {
 // ========================================
 // ALL LATEST ITEMS PAGE
 // ========================================
+async function loadAllLatestItems(page = 1) {
+    const container = document.getElementById("allLatestItems");
+    if (!container) return;
 
-async function loadAllLatestItems() {
+    const ITEMS_PER_PAGE = 20;
 
-    const container =
-        document.getElementById("allLatestItems");
-
-    if (!container) {
-        return;
-    }
-
-    container.innerHTML =
-        language === "JP"
-            ? "読み込み中..."
-            : "Loading...";
+    container.textContent = language === "JP"
+        ? "読み込み中..."
+        : "Loading...";
 
     try {
+        const items = await getGoogleSheetItems();
 
-        const items =
-            await getGoogleSheetItems();
+        const approved = items.filter(item =>
+            String(item["Status"] || "").trim().toLowerCase() === "approved"
+        );
 
-        const approved =
-            items.filter(item =>
-                String(item["Status"])
-                    .trim()
-                    .toLowerCase() === "approved"
-            );
-
-        approved.sort(
-            (a, b) =>
-                new Date(b["Timestamp"]) -
-                new Date(a["Timestamp"])
+        approved.sort((a, b) =>
+            new Date(b["Timestamp"] || 0) - new Date(a["Timestamp"] || 0)
         );
 
         if (approved.length === 0) {
-
-            container.innerHTML =
-                language === "JP"
-                    ? "<p>承認されたアイテムはありません。</p>"
-                    : "<p>No approved items yet.</p>";
-
+            container.innerHTML = language === "JP"
+                ? "<p>承認されたアイテムはありません。</p>"
+                : "<p>No approved items yet.</p>";
             return;
         }
 
-        const targetLang =
-            language === "JP"
-                ? "ja"
-                : "EN";
+        const totalPages = Math.ceil(approved.length / ITEMS_PER_PAGE);
+
+        page = Number(page);
+        if (!Number.isFinite(page)) page = 1;
+        page = Math.max(1, Math.min(page, totalPages));
+
+        const start = (page - 1) * ITEMS_PER_PAGE;
+        const pageItems = approved.slice(start, start + ITEMS_PER_PAGE);
+
+        const targetLang = language === "JP" ? "ja" : "EN";
 
         let htmlCards = "";
 
-        for (const item of approved) {
-
-            let itemName =
-                cleanText(item["Item name"]) ||
-                "Unknown item";
-
-            let description =
-                cleanText(item["Descption"]) ||
-                "No description";
-
-            let location =
-                cleanText(item["Location found"]) ||
-                "Unknown";
-
-            let date =
-                cleanText(item["Date"]) ||
-                "Unknown";
-
-            const photo =
-                cleanText(item["Photo"]);
+        for (const item of pageItems) {
+            let itemName = cleanText(item["Item name"]) || "Unknown item";
+            let description = cleanText(item["Descption"]) || "No description";
+            let location = cleanText(item["Location found"]) || "Unknown";
+            const date = cleanText(item["Date"]) || "Unknown";
+            const photo = cleanText(item["Photo"]);
 
             if (targetLang === "ja") {
-
-                itemName =
-                    await translateText(
-                        itemName,
-                        "ja"
-                    );
-
-                description =
-                    await translateText(
-                        description,
-                        "ja"
-                    );
-
-                location =
-                    await translateText(
-                        location,
-                        "ja"
-                    );
+                itemName = await translateText(itemName, "ja");
+                description = await translateText(description, "ja");
+                location = await translateText(location, "ja");
             }
 
-            const descLabel =
-                language === "JP"
-                    ? "説明:"
-                    : "Description:";
-
-            const locLabel =
-                language === "JP"
-                    ? "場所:"
-                    : "Location:";
-
-            const dateLabel =
-                language === "JP"
-                    ? "日付:"
-                    : "Date:";
+            const descLabel = language === "JP" ? "説明:" : "Description:";
+            const locLabel = language === "JP" ? "場所:" : "Location:";
+            const dateLabel = language === "JP" ? "日付:" : "Date:";
 
             htmlCards += `
                 <div>
-
-                    <strong>
-                        ${escapeHTML(itemName)}
-                    </strong>
-
-                    <br>
-
-                    ${
-                        photo
-                            ? `
-                                <a
-                                    href="${escapeHTML(photo)}"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                >
-                                    ${language === "JP"
-                                        ? "写真を見る"
-                                        : "View Photo"}
-                                </a>
-                                <br>
-                            `
-                            : ""
-                    }
-
-                    ${descLabel}
-                    ${escapeHTML(description)}
-
-                    <br>
-
-                    ${locLabel}
-                    ${escapeHTML(location)}
-
-                    <br>
-
-                    ${dateLabel}
-                    ${escapeHTML(date)}
-
+                    <strong>${escapeHTML(itemName)}</strong><br>
+                    ${photo
+                        ? `<a href="${escapeHTML(photo)}" target="_blank" rel="noopener noreferrer">${language === "JP" ? "写真を見る" : "View Photo"}</a><br>`
+                        : ""}
+                    ${descLabel} ${escapeHTML(description)}<br>
+                    ${locLabel} ${escapeHTML(location)}<br>
+                    ${dateLabel} ${escapeHTML(date)}
                 </div>
-
                 <hr>
             `;
         }
 
-        container.innerHTML =
-            htmlCards;
+        const previousLabel = language === "JP" ? "前へ" : "Previous";
+        const nextLabel = language === "JP" ? "次へ" : "Next";
+        const pageLabel = language === "JP"
+            ? `${page} / ${totalPages} ページ`
+            : `Page ${page} of ${totalPages}`;
+
+      const pagination = `
+    <div style="
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 12px;
+        width: 100%;
+        margin: 25px auto;
+        text-align: center;
+    ">
+        ${page > 1 ? `
+            <button type="button"
+                onclick="loadAllLatestItems(${page - 1})">
+                ${previousLabel}
+            </button>
+        ` : ""}
+
+        <span style="white-space: nowrap;">
+            ${pageLabel}
+        </span>
+
+        ${page < totalPages ? `
+            <button type="button"
+                onclick="loadAllLatestItems(${page + 1})">
+                ${nextLabel}
+            </button>
+        ` : ""}
+    </div>
+`;
+
+      container.innerHTML = htmlCards + pagination;
 
     } catch (error) {
+        console.error("Latest items error:", error);
 
-        console.error(
-            "Latest items error:",
-            error
-        );
-
-        container.innerHTML =
-            language === "JP"
-                ? "<p>最新アイテムを読み込めませんでした。</p>"
-                : "<p>Unable to load latest items.</p>";
+        container.textContent = language === "JP"
+            ? "最新アイテムを読み込めませんでした。"
+            : "Unable to load latest items.";
     }
 }
 
@@ -1113,7 +1063,7 @@ const translations = {
             "Loading...",
 
         viewAllLink:
-            "View all latest items →",
+            "View all latest items",
 
         systemDescLink:
             "System Description",
@@ -1143,7 +1093,7 @@ const translations = {
             "DEFAULT BROWSER IS RECOMMENDED",
 
         backHome:
-            "← Back to Home",
+            "Back to Home",
 
         latestTitle:
             "Latest Items",
@@ -1176,10 +1126,10 @@ const translations = {
             "生徒 忘れ物・落とし物システム",
 
         menuTitle:
-            "メニュー",
+            "メニューへ戻る",
 
         menuSearch:
-            "[1] アイテムを検索する",
+            "[1] 落とし物を検索する",
 
         menuReport:
             "[2] 落とし物を報告する",
@@ -1194,7 +1144,7 @@ const translations = {
             "読み込み中...",
 
         viewAllLink:
-            "すべての報告された落し物を見る →",
+            "すべての報告された落し物を見る",
 
         systemDescLink:
             "システム詳細",
@@ -1224,7 +1174,7 @@ const translations = {
             "デフォルトブラウザの使用をお勧めします",
 
         backHome:
-            "← ホームに戻る",
+            "ホームに戻る",
 
         latestTitle:
             "最近発見された落とし物",

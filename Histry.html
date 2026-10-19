@@ -3,44 +3,12 @@
 
 <head>
 
-    <script>
-async function checkMaintenance() {
-
-    if (window.location.pathname.endsWith("maintenance.html")) {
-        return;
-    }
-
-    try {
-        const response = await fetch(
-            "maintenance.json?t=" + Date.now(),
-            {
-                cache: "no-store"
-            }
-        );
-
-        const data = await response.json();
-
-        if (data.maintenance === true) {
-            window.location.replace("maintenance.html");
-        }
-
-    } catch (error) {
-        console.log("Maintenance check failed.");
-    }
-}
-
-checkMaintenance();
-</script>
-
     <meta charset="UTF-8">
-
-    <meta name="viewport"
-        content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>LostLink NTW - System History</title>
 
     <style>
-
         * {
             box-sizing: border-box;
         }
@@ -59,11 +27,9 @@ checkMaintenance();
         }
 
         @media (max-width: 600px) {
-
             body {
                 padding: 12px;
             }
-
         }
 
         /* ================================
@@ -82,6 +48,11 @@ checkMaintenance();
         }
 
         .nexus h1 {
+            margin: 0;
+            line-height: 1.1;
+        }
+
+        .nexus p {
             margin: 0;
             line-height: 1.1;
         }
@@ -134,16 +105,13 @@ checkMaintenance();
             font-size: 12px;
             opacity: 0.6;
         }
-
     </style>
 
     <script>
-
         // Prevent mobile browsers from restoring an old scroll position
         if ("scrollRestoration" in history) {
             history.scrollRestoration = "manual";
         }
-
     </script>
 
 </head>
@@ -162,19 +130,29 @@ checkMaintenance();
                 LostLink NTW
             </h1>
 
+            <p>
+                <a id="backHome" href="index.html">
+                    Back to Home
+                </a>
+            </p>
+
         </div>
 
         <div class="language-box">
 
             <button
                 id="enButton"
-                onclick="setLanguage('EN')">
+                type="button"
+                onclick="setLanguage('EN')"
+            >
                 EN
             </button>
 
             <button
                 id="jpButton"
-                onclick="setLanguage('JP')">
+                type="button"
+                onclick="setLanguage('JP')"
+            >
                 JP
             </button>
 
@@ -182,15 +160,11 @@ checkMaintenance();
 
     </div>
 
-    <p>
-        <a
-            id="backHome"
-            href="index.html">
-            ← Back to Home
-        </a>
-    </p>
-
     <hr>
+
+    <!-- ================================
+         SYSTEM HISTORY
+         ================================ -->
 
     <h2 id="pageSubtitle">
         System History
@@ -248,7 +222,6 @@ checkMaintenance();
 
     </div>
 
-
     <hr>
 
     <div class="info-group">
@@ -265,6 +238,22 @@ checkMaintenance();
 
     <hr>
 
+
+     <div class="info-group">
+
+        <p>
+            <u>Beta Prototype 改:</u>
+        </p>
+
+        <p>
+            Miner change model of Beta Prototype 1.0.0.
+        </p>
+
+    </div>
+
+    <hr>
+
+
     <div class="info-group">
 
         <p>
@@ -279,25 +268,27 @@ checkMaintenance();
 
     <hr>
 
+    <!-- ================================
+         VERSION
+         ================================ -->
+
     <div class="version-label">
-        Prototype χ
+        Beta Prototype 改
     </div>
+
+    <!-- ================================
+         SCRIPT
+         ================================ -->
 
     <script src="script.js"></script>
 
     <script>
-
         // Force page to the top after everything has loaded
         window.addEventListener("load", function () {
-
             setTimeout(function () {
-
                 window.scrollTo(0, 0);
-
             }, 100);
-
         });
-
     </script>
 
 </body>

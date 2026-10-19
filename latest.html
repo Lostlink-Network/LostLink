@@ -3,35 +3,6 @@
 
 <head>
 
-    <script>
-async function checkMaintenance() {
-
-    if (window.location.pathname.endsWith("maintenance.html")) {
-        return;
-    }
-
-    try {
-        const response = await fetch(
-            "maintenance.json?t=" + Date.now(),
-            {
-                cache: "no-store"
-            }
-        );
-
-        const data = await response.json();
-
-        if (data.maintenance === true) {
-            window.location.replace("maintenance.html");
-        }
-
-    } catch (error) {
-        console.log("Maintenance check failed.");
-    }
-}
-
-checkMaintenance();
-</script>
-
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Latest Items - PRJ LostLink</title>
@@ -122,38 +93,39 @@ checkMaintenance();
 <body>
 
     <!-- ================================
-         TOP BAR
-         ================================ -->
+     TOP BAR
+     ================================ -->
 
-    <div class="top-bar">
+<div class="top-bar">
 
-        <div class="nexus">
+<div class="nexus">
 
-            <h1 id="pageTitle">
-                LostLink NTW System
-            </h1>
-
-        </div>
-
-        <div class="language-box">
-
-            <button id="enButton" onclick="setLanguage('EN')">
-                EN
-            </button>
-
-            <button id="jpButton" onclick="setLanguage('JP')">
-                JP
-            </button>
-
-        </div>
-
-    </div>
+    <h1 id="pageTitle">
+        LostLink NTW
+    </h1>
 
     <p>
         <a id="backHome" href="index.html">
-            ← Back to Home
+            Back to Home
         </a>
     </p>
+</div>
+
+<div class="language-box">
+
+    <button id="enButton"
+        onclick="setLanguage('EN')">
+        EN
+    </button>
+
+    <button id="jpButton"
+        onclick="setLanguage('JP')">
+        JP
+    </button>
+
+</div>
+
+</div>
 
     <hr>
 
@@ -168,7 +140,7 @@ checkMaintenance();
     <script src="script.js"></script>
 
     <div class="version-label">
-        Beta Prototype 1.0.0
+        Beta Prototype 改
     </div>
 
 </body>
