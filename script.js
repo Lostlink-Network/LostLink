@@ -14,63 +14,13 @@ window.addEventListener("pageshow", function () {
     window.scrollTo(0, 0);
 });
 
-
-// ========================================
-// MAINTENANCE MODE
-// ========================================
-
-async function checkMaintenance() {
-
-    const page =
-        window.location.pathname
-            .split("/")
-            .pop()
-            .toLowerCase();
-
-    if (
-        page === "admin-dashboard.html" ||
-        page === "maintenance.html"
-    ) {
-        return;
-    }
-
-    try {
-
-        const response = await fetch(
-            "./maintenance.json?t=" + Date.now(),
-            {
-                cache: "no-store"
-            }
-        );
-
-        const data =
-            await response.json();
-
-        if (data.maintenance === true) {
-
-            window.location.href =
-                "./maintenance.html";
-        }
-
-    } catch (error) {
-
-        console.log(
-            "Maintenance check failed:",
-            error
-        );
-    }
-}
-
-checkMaintenance();
-
-
 // ========================================
 // GOOGLE SHEET
 // ========================================
 
 const sheetURL =
     "https://docs.google.com/spreadsheets/d/e/2PACX-1vT2f-TYo7GhC5rCURjJ29sp-jBOV4Ki_g5cL84HOUoqXm6XPc08i4Dp43pG91GpOiyLY2e00SArOzGE/pub?output=csv";
-
+const API_URL = "https://script.google.com/macros/s/AKfycbylXVFYTvxm52aW23HH1xCRknB6IsyQ82eDfUAxcztxTGhsmzlaXMfoNltv4hAvapj5dg/exec";
 
 // ========================================
 // LOCAL PROTOTYPE DATABASE
@@ -138,155 +88,248 @@ function cleanText(value) {
 
 
 
-// ========================================
-// SEARCH
-// ========================================
 
-async function searchItem() {
+ // ========================================
+ // SEARCH
+ // ========================================
 
-    const searchBox =
-        document.getElementById("searchBox");
+let lastSearchResults = null;
+let searchRequestId = 0;
+let searchRenderId = 0;
 
-    const resultsBox =
-        document.getElementById("results");
+// Render search results in the selected language.
 
-    if (!searchBox || !resultsBox) {
+async function renderSearchResults(results) {
+    const resultsBox = document.getElementById("results");
+    if (!resultsBox) return;
+
+    const currentRenderId = ++searchRenderId;
+    const renderLanguage = language;
+    const targetLang = renderLanguage === "JP" ? "ja" : "en";
+
+    if (!Array.isArray(results) || results.length === 0) {
+        resultsBox.textContent =
+            renderLanguage === "JP"
+                ? "該当する承認済みアイテムは見つかりませんでした。"
+                : "No approved items found.";
         return;
     }
 
-    const keyword =
-        searchBox.value.trim().toLowerCase();
+    resultsBox.textContent =
+        renderLanguage === "JP"
+            ? "検索結果を読み込み中..."
+            : "Loading results...";
 
-    if (keyword === "") {
+    try {
+        const renderedResults = await Promise.all(
+            results.map(async item => {
+                const name =
+                    cleanText(item["Item name"] ?? item.name) ||
+                    "Unknown item";
 
+                const description =
+                    cleanText(item["Descption"] ?? item.description) ||
+                    "No description";
+
+                const location =
+                    cleanText(item["Location found"] ?? item.location) ||
+                    "Unknown";
+
+                const rawDate =
+                    item["Timestamp"] ??
+                    item.timestamp ??
+                    item["Date"] ??
+                    item.date;
+
+                const date = rawDate
+                    ? String(rawDate)
+                    : "Unknown";
+
+                const photo =
+                    cleanText(item["Photo"] ?? item.photo);
+
+                const [
+                    displayName,
+                    displayDescription,
+                    displayLocation
+                ] = await Promise.all([
+                    translateText(name, targetLang),
+                    translateText(description, targetLang),
+                    translateText(location, targetLang)
+                ]);
+
+                // Ignore results from an outdated render.
+                if (
+                    currentRenderId !== searchRenderId ||
+                    renderLanguage !== language
+                ) {
+                    return "";
+                }
+
+                const descriptionLabel =
+                    renderLanguage === "JP"
+                        ? "説明"
+                        : "Description";
+
+                const locationLabel =
+                    renderLanguage === "JP"
+                        ? "場所"
+                        : "Location";
+
+                const dateLabel =
+                    renderLanguage === "JP"
+                        ? "日付"
+                        : "Date";
+
+                const photoLabel =
+                    renderLanguage === "JP"
+                        ? "写真を見る"
+                        : "View Photo";
+
+                return `
+                    <div class="search-result">
+                        <strong>${escapeHTML(displayName)}</strong>
+
+                        ${photo ? `
+                            <br>
+                            <a
+                                href="${escapeHTML(photo)}"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                            >${photoLabel}</a>
+                        ` : ""}
+
+                        <br>
+                        ${descriptionLabel}:
+                        ${escapeHTML(displayDescription)}
+
+                        <br>
+                        ${locationLabel}:
+                        ${escapeHTML(displayLocation)}
+
+                        <br>
+                        ${dateLabel}:
+                        ${escapeHTML(date)}
+                    </div>
+                    <hr>
+                `;
+            })
+        );
+
+        // Check again before updating the page.
+        if (
+            currentRenderId !== searchRenderId ||
+            renderLanguage !== language
+        ) {
+            return;
+        }
+
+        resultsBox.innerHTML = renderedResults.join("");
+
+    } catch (error) {
+        console.error(
+            "Rendering search results failed:",
+            error
+        );
+
+        if (
+            currentRenderId === searchRenderId &&
+            renderLanguage === language
+        ) {
+            resultsBox.textContent =
+                renderLanguage === "JP"
+                    ? "検索結果の表示中にエラーが発生しました。"
+                    : "An error occurred while displaying search results.";
+        }
+    }
+}
+
+
+// Refresh existing results when the display language changes.
+function refreshSearchResultsLanguage() {
+    if (!Array.isArray(lastSearchResults)) return;
+
+    renderSearchResults(lastSearchResults);
+}
+
+
+// Search using the Google Apps Script API.
+
+async function searchItem() {
+    const searchBox = document.getElementById("searchBox");
+    const resultsBox = document.getElementById("results");
+
+    if (!searchBox || !resultsBox) return;
+
+    const keyword = searchBox.value.trim();
+    const currentRequestId = ++searchRequestId;
+
+    if (!keyword) {
         resultsBox.innerText =
-            "Please enter a search term above.";
-
+            language === "JP"
+                ? "検索キーワードを入力してください。"
+                : "Please enter a search keyword.";
+        lastSearchResults = null;
         return;
     }
 
     resultsBox.innerText =
-        "Searching...";
+        language === "JP" ? "検索中..." : "Searching...";
 
     try {
+        // Detect Japanese independently of the display language.
+        const containsJapanese =
+            /[\u3040-\u30ff\u3400-\u9fff]/.test(keyword);
 
-        const items =
-            await getGoogleSheetItems();
-
-        const approved =
-            items.filter(item =>
-                String(item["Status"])
-                    .trim()
-                    .toLowerCase() === "approved"
-            );
-
-        const results =
-            approved.filter(item => {
-
-                const name =
-                    cleanText(item["Item name"])
-                        .toLowerCase();
-
-                const description =
-                    cleanText(item["Descption"])
-                        .toLowerCase();
-
-                const location =
-                    cleanText(item["Location found"])
-                        .toLowerCase();
-
-                return (
-                    name.includes(keyword) ||
-                    description.includes(keyword) ||
-                    location.includes(keyword)
-                );
-            });
-
-        if (results.length === 0) {
-
-            resultsBox.innerText =
-                "No approved items found.";
-
-            return;
-        }
-
-        resultsBox.innerHTML =
-            results.map(item => {
-
-                const name =
-                    cleanText(item["Item name"]) ||
-                    "Unknown item";
-
-                const description =
-                    cleanText(item["Descption"]);
-
-                const location =
-                    cleanText(item["Location found"]) ||
-                    "Unknown";
-
-                const date =
-                    cleanText(item["Date"]) ||
-                    "Unknown";
-
-                const photo =
-                    cleanText(item["Photo"]);
-
-                return `
-                    <div>
-
-                        <strong>
-                            ${escapeHTML(name)}
-                        </strong>
-
-                        ${
-                            photo
-                                ? `
-                                    <br>
-
-                                    <a
-                                        href="${escapeHTML(photo)}"
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                    >
-                                        View Photo
-                                    </a>
-                                `
-                                : ""
-                        }
-
-                        <br>
-
-                        Description:
-                        ${escapeHTML(description)}
-
-                        <br>
-
-                        Location:
-                        ${escapeHTML(location)}
-
-                        <br>
-
-                        Date:
-                        ${escapeHTML(date)}
-
-                    </div>
-
-                    <hr>
-                `;
-
-            }).join("");
-
-    } catch (error) {
-
-        console.error(
-            "Search error:",
-            error
+        const targetSearchLang = containsJapanese ? "en" : "ja";
+        const translatedKeyword = await translateText(
+            keyword,
+            targetSearchLang
         );
 
+        if (currentRequestId !== searchRequestId) return;
+
+        const url = new URL(API_URL);
+        url.searchParams.set("action", "search");
+        url.searchParams.set("q", keyword);
+        url.searchParams.set("q2", translatedKeyword);
+
+        const response = await fetch(url.toString());
+
+        if (!response.ok) {
+            throw new Error(`API request failed: HTTP ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        if (!data.success || !Array.isArray(data.items)) {
+            throw new Error(data.error || "Invalid API response");
+        }
+
+        if (currentRequestId !== searchRequestId) return;
+
+        lastSearchResults = data.items;
+        await renderSearchResults(data.items);
+
+    } catch (error) {
+        console.error("Search failed:", error);
+
+        if (currentRequestId !== searchRequestId) return;
+
         resultsBox.innerText =
-            "Unable to search the items right now.";
+            language === "JP"
+                ? "現在、アイテムを検索できません。"
+                : "Unable to search the items right now.";
     }
 }
+
+
+function refreshSearchResultsLanguage() {
+    if (!Array.isArray(lastSearchResults)) return;
+
+    renderSearchResults(lastSearchResults);
+}
+
 
 
 
@@ -499,349 +542,358 @@ function rejectItem(id) {
     loadAdminItems();
 }
 
-
-// ========================================
-// TRANSLATION CACHE
-// ========================================
+ // ========================================
+ // SHARED TRANSLATION SYSTEM - EN / JP
+ // ========================================
 
 const translationCache = {};
 
 async function translateText(text, targetLang) {
+    if (!text) return text;
 
-    if (!text || targetLang === "EN") {
-        return text;
-    }
-
-    const cacheKey =
-        `${targetLang}_${text}`;
+    const target = targetLang.toLowerCase();
+    const cacheKey = `${target}:${text}`;
 
     if (translationCache[cacheKey]) {
         return translationCache[cacheKey];
     }
 
     try {
-
         const url =
-            `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${targetLang}&dt=t&q=` +
+            "https://translate.googleapis.com/translate_a/single" +
+            `?client=gtx&sl=auto&tl=${target}&dt=t&q=` +
             encodeURIComponent(text);
 
-        const res =
-            await fetch(url);
+        const response = await fetch(url);
 
-        const data =
-            await res.json();
+        if (!response.ok) {
+            throw new Error("Translation request failed");
+        }
 
-        const translated =
-            data[0]
-                .map(item => item[0])
-                .join("");
+        const data = await response.json();
 
-        translationCache[cacheKey] =
-            translated;
+        const translated = Array.isArray(data[0])
+            ? data[0].map(part => part[0] || "").join("")
+            : "";
 
-        return translated;
+        if (translated) {
+            translationCache[cacheKey] = translated;
+            return translated;
+        }
 
-    } catch (e) {
-
+        return text;
+    } catch (error) {
+        console.warn("Translation failed:", error);
         return text;
     }
 }
 
 
-// ========================================
-// RECENTLY FOUND ITEMS - HOMEPAGE
-// ========================================
+
+
+ // ========================================
+ // RECENTLY FOUND ITEMS - HOMEPAGE
+ // ========================================
 
 async function loadLatestItems() {
+    const container = document.getElementById("latestItems");
+    if (!container) return;
 
-    const container =
-        document.getElementById("latestItems");
+    const renderLanguage = language;
 
-    if (!container) {
-        return;
-    }
-
-    container.innerHTML =
-        language === "JP"
-            ? "読み込み中..."
-            : "Loading...";
+    container.textContent =
+        renderLanguage === "JP" ? "読み込み中..." : "Loading...";
 
     try {
-
-        const items =
-            await getGoogleSheetItems();
-
-        const approved =
-            items.filter(item =>
-                String(item["Status"])
-                    .trim()
-                    .toLowerCase() === "approved"
-            );
-
-        approved.sort(
-            (a, b) =>
-                new Date(b["Timestamp"]) -
-                new Date(a["Timestamp"])
+        const response = await fetch(
+            `${API_URL}?action=latest&limit=3`
         );
 
-        const recent =
-            approved.slice(0, 3);
+        if (!response.ok) {
+            throw new Error("LostLink API request failed.");
+        }
+
+        const data = await response.json();
+
+        if (!data.success || !Array.isArray(data.items)) {
+            throw new Error(data.error || "Invalid API response.");
+        }
+
+        if (renderLanguage !== language) return;
+
+        const recent = data.items;
 
         if (recent.length === 0) {
-
-            container.innerHTML =
-                language === "JP"
-                    ? "<p>承認されたアイテムはありません。</p>"
-                    : "<p>No approved items yet.</p>";
-
+            container.textContent =
+                renderLanguage === "JP"
+                    ? "承認されたアイテムはありません。"
+                    : "No approved items yet.";
             return;
         }
 
         const targetLang =
-            language === "JP"
-                ? "ja"
-                : "EN";
+            renderLanguage === "JP" ? "ja" : "en";
 
-        let htmlCards = "";
+        const cards = await Promise.all(
+            recent.map(async item => {
+                const name =
+                    cleanText(item.name ?? item["Item name"]) ||
+                    "Unknown item";
 
-        for (const item of recent) {
+                const description =
+                    cleanText(item.description ?? item["Descption"]) ||
+                    "No description";
 
-            let itemName =
-                cleanText(item["Item name"]) ||
-                "Unknown item";
+                const location =
+                    cleanText(item.location ?? item["Location found"]) ||
+                    "Unknown";
 
-            let description =
-                cleanText(item["Descption"]) ||
-                "No description";
+                const date =
+                    cleanText(item.timestamp ?? item["Timestamp"]) ||
+                    "Unknown";
 
-            let location =
-                cleanText(item["Location found"]) ||
-                "Unknown";
+                const photo = cleanText(item.photo ?? item["Photo"]);
 
-            let date =
-                cleanText(item["Date"]) ||
-                "Unknown";
+                const [displayName, displayDescription, displayLocation] =
+                    await Promise.all([
+                        translateText(name, targetLang),
+                        translateText(description, targetLang),
+                        translateText(location, targetLang)
+                    ]);
 
-            const photo =
-                cleanText(item["Photo"]);
+                const descriptionLabel =
+                    renderLanguage === "JP" ? "説明:" : "Description:";
 
-            if (targetLang === "ja") {
+                const locationLabel =
+                    renderLanguage === "JP" ? "場所:" : "Location:";
 
-                itemName =
-                    await translateText(
-                        itemName,
-                        "ja"
-                    );
+                const dateLabel =
+                    renderLanguage === "JP" ? "日付:" : "Date:";
 
-                description =
-                    await translateText(
-                        description,
-                        "ja"
-                    );
+                const photoLabel =
+                    renderLanguage === "JP" ? "写真を見る" : "View Photo";
 
-                location =
-                    await translateText(
-                        location,
-                        "ja"
-                    );
-            }
+                return `
+                    <div>
+                        <strong>${escapeHTML(displayName)}</strong>
 
-            const descLabel =
-                language === "JP"
-                    ? "説明:"
-                    : "Description:";
+                        ${photo ? `
+                            <br>
+                            <a
+                                href="${escapeHTML(photo)}"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                            >${photoLabel}</a>
+                        ` : ""}
 
-            const locLabel =
-                language === "JP"
-                    ? "場所:"
-                    : "Location:";
+                        <br>
+                        ${descriptionLabel}
+                        ${escapeHTML(displayDescription)}
 
-            const dateLabel =
-                language === "JP"
-                    ? "日付:"
-                    : "Date:";
+                        <br>
+                        ${locationLabel}
+                        ${escapeHTML(displayLocation)}
 
-            htmlCards += `
-                <div>
-
-                    <strong>
-                        ${escapeHTML(itemName)}
-                    </strong>
-
-                    ${
-                        photo
-                            ? `
-                                <br>
-
-                                <a
-                                    href="${escapeHTML(photo)}"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                >
-                                    View Photo
-                                </a>
-                            `
-                            : ""
-                    }
-
-                    <br>
-
-                    ${descLabel}
-                    ${escapeHTML(description)}
-
-                    <br>
-
-                    ${locLabel}
-                    ${escapeHTML(location)}
-
-                    <br>
-
-                    ${dateLabel}
-                    ${escapeHTML(date)}
-
-                </div>
-
-                <hr>
-            `;
-        }
-
-        container.innerHTML =
-            htmlCards;
-
-    } catch (error) {
-
-        console.error(
-            "Google Sheet error:",
-            error
+                        <br>
+                        ${dateLabel}
+                        ${escapeHTML(date)}
+                    </div>
+                    <hr>
+                `;
+            })
         );
 
-        container.innerHTML =
-            language === "JP"
-                ? "<p>最近見つかったアイテムを読み込めませんでした。</p>"
-                : "<p>Unable to load recently found items.</p>";
+        if (renderLanguage !== language) return;
+
+        container.innerHTML = cards.join("");
+
+    } catch (error) {
+        console.error("Homepage latest items error:", error);
+
+        if (renderLanguage !== language) return;
+
+        container.textContent =
+            renderLanguage === "JP"
+                ? "最近見つかったアイテムを読み込めませんでした。"
+                : "Unable to load recently found items.";
     }
 }
 
 
-// ========================================
-// ALL LATEST ITEMS PAGE
-// ========================================
+
+
+ // ========================================
+ // ALL LATEST ITEMS PAGE
+ // ========================================
+
 async function loadAllLatestItems(page = 1) {
     const container = document.getElementById("allLatestItems");
     if (!container) return;
 
     const ITEMS_PER_PAGE = 20;
+    const renderLanguage = language;
 
-    container.textContent = language === "JP"
-        ? "読み込み中..."
-        : "Loading...";
+    container.textContent =
+        renderLanguage === "JP" ? "読み込み中..." : "Loading...";
 
     try {
         const items = await getGoogleSheetItems();
+
+        if (renderLanguage !== language) return;
 
         const approved = items.filter(item =>
             String(item["Status"] || "").trim().toLowerCase() === "approved"
         );
 
         approved.sort((a, b) =>
-            new Date(b["Timestamp"] || 0) - new Date(a["Timestamp"] || 0)
+            new Date(b["Timestamp"] || 0) -
+            new Date(a["Timestamp"] || 0)
         );
 
         if (approved.length === 0) {
-            container.innerHTML = language === "JP"
-                ? "<p>承認されたアイテムはありません。</p>"
-                : "<p>No approved items yet.</p>";
+            container.textContent =
+                renderLanguage === "JP"
+                    ? "承認されたアイテムはありません。"
+                    : "No approved items yet.";
             return;
         }
 
-        const totalPages = Math.ceil(approved.length / ITEMS_PER_PAGE);
+        const totalPages = Math.ceil(
+            approved.length / ITEMS_PER_PAGE
+        );
 
         page = Number(page);
         if (!Number.isFinite(page)) page = 1;
+
         page = Math.max(1, Math.min(page, totalPages));
 
         const start = (page - 1) * ITEMS_PER_PAGE;
-        const pageItems = approved.slice(start, start + ITEMS_PER_PAGE);
+        const pageItems = approved.slice(
+            start,
+            start + ITEMS_PER_PAGE
+        );
 
-        const targetLang = language === "JP" ? "ja" : "EN";
+        const targetLang =
+            renderLanguage === "JP" ? "ja" : "en";
 
-        let htmlCards = "";
+        const cards = await Promise.all(
+            pageItems.map(async item => {
+                const name =
+                    cleanText(item["Item name"]) || "Unknown item";
 
-        for (const item of pageItems) {
-            let itemName = cleanText(item["Item name"]) || "Unknown item";
-            let description = cleanText(item["Descption"]) || "No description";
-            let location = cleanText(item["Location found"]) || "Unknown";
-            const date = cleanText(item["Date"]) || "Unknown";
-            const photo = cleanText(item["Photo"]);
+                const description =
+                    cleanText(item["Descption"]) || "No description";
 
-            if (targetLang === "ja") {
-                itemName = await translateText(itemName, "ja");
-                description = await translateText(description, "ja");
-                location = await translateText(location, "ja");
-            }
+                const location =
+                    cleanText(item["Location found"]) || "Unknown";
 
-            const descLabel = language === "JP" ? "説明:" : "Description:";
-            const locLabel = language === "JP" ? "場所:" : "Location:";
-            const dateLabel = language === "JP" ? "日付:" : "Date:";
+                const rawDate =
+                    item["Timestamp"] || item["Date"];
 
-            htmlCards += `
-                <div>
-                    <strong>${escapeHTML(itemName)}</strong><br>
-                    ${photo
-                        ? `<a href="${escapeHTML(photo)}" target="_blank" rel="noopener noreferrer">${language === "JP" ? "写真を見る" : "View Photo"}</a><br>`
-                        : ""}
-                    ${descLabel} ${escapeHTML(description)}<br>
-                    ${locLabel} ${escapeHTML(location)}<br>
-                    ${dateLabel} ${escapeHTML(date)}
-                </div>
-                <hr>
-            `;
-        }
+                const date = rawDate
+                    ? String(rawDate)
+                    : "Unknown";
 
-        const previousLabel = language === "JP" ? "前へ" : "Previous";
-        const nextLabel = language === "JP" ? "次へ" : "Next";
-        const pageLabel = language === "JP"
+                const photo = cleanText(item["Photo"]);
+
+                const [displayName, displayDescription, displayLocation] =
+                    await Promise.all([
+                        translateText(name, targetLang),
+                        translateText(description, targetLang),
+                        translateText(location, targetLang)
+                    ]);
+
+                const descriptionLabel =
+                    renderLanguage === "JP" ? "説明:" : "Description:";
+
+                const locationLabel =
+                    renderLanguage === "JP" ? "場所:" : "Location:";
+
+                const dateLabel =
+                    renderLanguage === "JP" ? "日付:" : "Date:";
+
+                const photoLabel =
+                    renderLanguage === "JP" ? "写真を見る" : "View Photo";
+
+                return `
+                    <div>
+                        <strong>${escapeHTML(displayName)}</strong><br>
+
+                        ${photo ? `
+                            <a
+                                href="${escapeHTML(photo)}"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                            >${photoLabel}</a><br>
+                        ` : ""}
+
+                        ${descriptionLabel}
+                        ${escapeHTML(displayDescription)}<br>
+
+                        ${locationLabel}
+                        ${escapeHTML(displayLocation)}<br>
+
+                        ${dateLabel}
+                        ${escapeHTML(date)}
+                    </div>
+                    <hr>
+                `;
+            })
+        );
+
+        if (renderLanguage !== language) return;
+
+        const previousLabel =
+            renderLanguage === "JP" ? "前へ" : "Previous";
+
+        const nextLabel =
+            renderLanguage === "JP" ? "次へ" : "Next";
+
+        const pageLabel = renderLanguage === "JP"
             ? `${page} / ${totalPages} ページ`
             : `Page ${page} of ${totalPages}`;
 
-      const pagination = `
-    <div style="
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        gap: 12px;
-        width: 100%;
-        margin: 25px auto;
-        text-align: center;
-    ">
-        ${page > 1 ? `
-            <button type="button"
-                onclick="loadAllLatestItems(${page - 1})">
-                ${previousLabel}
-            </button>
-        ` : ""}
+        const pagination = `
+            <div style="
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                gap: 12px;
+                width: 100%;
+                margin: 25px auto;
+                text-align: center;
+            ">
+                ${page > 1 ? `
+                    <button type="button"
+                        onclick="loadAllLatestItems(${page - 1})">
+                        ${previousLabel}
+                    </button>
+                ` : ""}
 
-        <span style="white-space: nowrap;">
-            ${pageLabel}
-        </span>
+                <span style="white-space: nowrap;">
+                    ${pageLabel}
+                </span>
 
-        ${page < totalPages ? `
-            <button type="button"
-                onclick="loadAllLatestItems(${page + 1})">
-                ${nextLabel}
-            </button>
-        ` : ""}
-    </div>
-`;
+                ${page < totalPages ? `
+                    <button type="button"
+                        onclick="loadAllLatestItems(${page + 1})">
+                        ${nextLabel}
+                    </button>
+                ` : ""}
+            </div>
+        `;
 
-      container.innerHTML = htmlCards + pagination;
+        container.innerHTML = cards.join("") + pagination;
 
     } catch (error) {
         console.error("Latest items error:", error);
 
-        container.textContent = language === "JP"
-            ? "最新アイテムを読み込めませんでした。"
-            : "Unable to load latest items.";
+        if (renderLanguage !== language) return;
+
+        container.textContent =
+            renderLanguage === "JP"
+                ? "最新アイテムを読み込めませんでした。"
+                : "Unable to load latest items.";
     }
 }
 
@@ -966,68 +1018,52 @@ function escapeHTML(value) {
 // ========================================
 
 let language =
-    localStorage.getItem("lostlinkLanguage") ||
-    "EN";
+    localStorage.getItem("lostlinkLanguage") || "EN";
 
 function setLanguage(selectedLanguage) {
+    if (selectedLanguage !== "EN" && selectedLanguage !== "JP") {
+        return;
+    }
 
-    language =
-        selectedLanguage;
+    language = selectedLanguage;
 
-    localStorage.setItem(
-        "lostlinkLanguage",
-        language
-    );
+    try {
+        localStorage.setItem("lostlinkLanguage", language);
+    } catch (error) {
+        console.warn("Could not save language preference:", error);
+    }
 
-    updateLanguageButtons();
+   updateLanguageButtons();
 
+if (typeof applyTranslations === "function") {
     applyTranslations();
+}
 
-    if (
-        typeof loadLatestItems === "function"
-    ) {
-        loadLatestItems();
-    }
+if (typeof loadLatestItems === "function") {
+    loadLatestItems();
+}
 
-    if (
-        typeof loadAllLatestItems === "function"
-    ) {
-        loadAllLatestItems();
-    }
+if (typeof loadAllLatestItems === "function") {
+    loadAllLatestItems();
+}
+
+if (typeof refreshSearchResultsLanguage === "function") {
+    refreshSearchResultsLanguage();
+}
+
 }
 
 function updateLanguageButtons() {
 
-    const enButton =
-        document.getElementById("enButton");
-
-    const jpButton =
-        document.getElementById("jpButton");
+    const enButton = document.getElementById("enButton");
+    const jpButton = document.getElementById("jpButton");
 
     if (!enButton || !jpButton) {
         return;
     }
 
-    enButton.classList.remove(
-        "selected"
-    );
-
-    jpButton.classList.remove(
-        "selected"
-    );
-
-    if (language === "EN") {
-
-        enButton.classList.add(
-            "selected"
-        );
-
-    } else {
-
-        jpButton.classList.add(
-            "selected"
-        );
-    }
+    enButton.classList.toggle("selected", language === "EN");
+    jpButton.classList.toggle("selected", language === "JP");
 }
 
 updateLanguageButtons();
