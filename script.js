@@ -1084,13 +1084,13 @@ const translations = {
             "Menu",
 
         menuSearch:
-            "[1] Search for an item",
+            "Search for an item",
 
         menuReport:
-            "[2] Report a lost/found item",
+            "Report a lost/found item",
 
         menuLatest:
-            "[3] View Latest Items",
+            "View Latest Items",
 
         recentTitle:
             "Recently Found Items",
@@ -1103,6 +1103,9 @@ const translations = {
 
         systemDescLink:
             "System Description",
+
+        systemHistoryLink:
+            "System History",
 
         pageTitle:
             "LostLink NTW",
@@ -1127,9 +1130,6 @@ const translations = {
 
         browserText:
             "DEFAULT BROWSER IS RECOMMENDED",
-
-        backHome:
-            "Back to Home",
 
         latestTitle:
             "Latest Items",
@@ -1162,16 +1162,16 @@ const translations = {
             "生徒 忘れ物・落とし物システム",
 
         menuTitle:
-            "メニューへ戻る",
+            "メニュー",
 
         menuSearch:
-            "[1] 落とし物を検索する",
+            "落とし物を検索する",
 
         menuReport:
-            "[2] 落とし物を報告する",
+            "落とし物を報告する",
 
         menuLatest:
-            "[3] 報告された落とし物を閲覧する",
+            "報告された落とし物を閲覧する",
 
         recentTitle:
             "最近報告された落とし物",
@@ -1184,6 +1184,9 @@ const translations = {
 
         systemDescLink:
             "システム詳細",
+
+        systemHistoryLink:
+            "システム履歴",
 
         pageTitle:
             "LostLink NTW",
@@ -1208,9 +1211,6 @@ const translations = {
 
         browserText:
             "デフォルトブラウザの使用をお勧めします",
-
-        backHome:
-            "ホームに戻る",
 
         latestTitle:
             "最近発見された落とし物",
