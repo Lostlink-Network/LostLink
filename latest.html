@@ -91,6 +91,28 @@
             font-size: 12px;
             opacity: 0.6;
         }
+
+        .latest-filter {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 12px 0 18px;
+        }
+
+        .latest-filter label {
+            font-weight: 600;
+        }
+
+        .latest-filter select {
+            max-width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #19386A;
+            border-radius: 5px;
+            background: white;
+            color: #19386A;
+            font: inherit;
+        }
     </style>
 
     <link rel="stylesheet" href="site-theme.css">
@@ -140,6 +162,29 @@
 
     <hr>
 
+    <div class="latest-filter">
+        <label for="latestCategoryFilter" id="categoryFilterLabel">
+            Category:
+        </label>
+
+        <select id="latestCategoryFilter" onchange="filterLatestItems()">
+            <option value="">All Categories</option>
+            <option value="Stationery">Stationery</option>
+            <option value="Electronics">Electronics</option>
+            <option value="School Supplies">School Supplies</option>
+            <option value="Bags & Pouches">Bags &amp; Pouches</option>
+            <option value="Clothing & Uniforms">Clothing &amp; Uniforms</option>
+            <option value="Everyday Items">Everyday Items</option>
+            <option value="Wallets & Cards">Wallets &amp; Cards</option>
+            <option value="Keys">Keys</option>
+            <option value="Accessories">Accessories</option>
+            <option value="Sports Equipment">Sports Equipment</option>
+            <option value="Other">Other</option>
+        </select>
+    </div>
+
+    <hr>
+
     <div id="allLatestItems">
         Loading...
     </div>
@@ -147,7 +192,7 @@
     <script src="script.js"></script>
 
     <div class="version-label">
-        GF-00
+        GF-01
     </div>
 
 </body>
