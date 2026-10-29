@@ -216,7 +216,7 @@ button:hover {
     align-items: start;
 }
 
-#allLatestItems > div:not([style]) {
+#allLatestItems .latest-item {
     min-width: 0;
     padding: 16px;
     margin: 0;

@@ -898,7 +898,7 @@ async function searchItem() {
                                 : "View Photo";
 
                         return `
-                            <div>
+                            <div class="latest-item">
                                 <strong>${escapeHTML(displayName)}</strong><br>
 
                                 ${displayCategory ? `
