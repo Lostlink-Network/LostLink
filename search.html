@@ -2,7 +2,6 @@
 <html lang="en">
 
 <head>
-
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Search - PRJ LostLink</title>
@@ -84,11 +83,13 @@
            SEARCH
            ================================ */
 
-        #searchBox {
+        #searchBox,
+        #categoryFilter {
+            display: block;
             width: 70%;
             max-width: 400px;
             padding: 10px;
-            margin-bottom: 10px;
+            margin: 8px 0 14px;
             font-size: 16px;
         }
 
@@ -99,15 +100,46 @@
             cursor: pointer;
         }
 
+        /* SEARCH RESULTS */
         #results {
-            margin-top: 16px;
+            display: grid !important;
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            column-gap: 28px;
+            row-gap: 16px;
+            align-items: start;
+            width: 100%;
+            margin-top: 0;
+            padding: 0;
         }
 
-        @media (max-width: 600px) {
-            #searchBox,
-            #searchButton {
-                width: 100%;
-                max-width: none;
+        /* Box each search result */
+        #results .search-result {
+            min-width: 0;
+            width: 100%;
+            padding: 16px;
+            border: 1px solid #19386a;
+            border-radius: 8px;
+            background: #ffffff;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+            overflow-wrap: anywhere;
+        }
+
+        /* Hide existing separators to avoid duplicate lines */
+        #results hr {
+            display: none !important;
+        }
+
+        /* Images */
+        #results img {
+            max-width: 100%;
+            height: auto;
+        }
+
+        /* Mobile: one column */
+        @media (max-width: 700px) {
+            #results {
+                grid-template-columns: minmax(0, 1fr) !important;
+                column-gap: 0;
             }
         }
 
@@ -125,19 +157,15 @@
     </style>
 
     <link rel="stylesheet" href="site-theme.css">
-
 </head>
 
 <body>
-
     <!-- ================================
          TOP BAR
          ================================ -->
 
     <div class="top-bar">
-
         <div class="nexus">
-
             <h1>
                 <a id="pageTitle" href="index.html">LostLink NTW</a>
             </h1>
@@ -145,35 +173,29 @@
             <p id="subTitle">
                 Student Lost &amp; Found System
             </p>
-
         </div>
 
         <div class="language-box">
-
             <button
                 id="enButton"
                 type="button"
-                onclick="setLanguage('EN')"
-            >
+                onclick="setLanguage('EN')">
                 EN
             </button>
 
             <button
                 id="jpButton"
                 type="button"
-                onclick="setLanguage('JP')"
-            >
+                onclick="setLanguage('JP')">
                 JP
             </button>
-
         </div>
-
     </div>
 
     <hr>
 
     <!-- ================================
-         SEARCH SECTION
+         SEARCH
          ================================ -->
 
     <h2 id="searchTitle">
@@ -181,25 +203,39 @@
     </h2>
 
     <form id="searchForm">
+        <input
+            type="text"
+            id="searchBox"
+            placeholder="Enter item name"
+        >
 
-       <input
-    type="text"
-    id="searchBox"
-    placeholder="Enter item name"
->
+        <label for="categoryFilter" id="categoryLabel">
+            Category (Optional):
+        </label>
 
-        <br>
+        <select id="categoryFilter" onchange="searchItem()">
+            <option value="all">All Categories</option>
+            <option value="Stationery">Stationery (文房具)</option>
+            <option value="Electronics">Electronics (電子機器)</option>
+            <option value="School Supplies">School Supplies (学用品)</option>
+            <option value="Bags &amp; Pouches">Bags &amp; Pouches (バッグ・ポーチ)</option>
+            <option value="Clothing &amp; Uniforms">Clothing &amp; Uniforms (衣類・制服)</option>
+            <option value="Everyday Items">Everyday Items (日用品)</option>
+            <option value="Wallets &amp; Cards">Wallets &amp; Cards (財布・カード)</option>
+            <option value="Keys">Keys (鍵)</option>
+            <option value="Accessories">Accessories (小物・アクセサリー)</option>
+            <option value="Sports Equipment">Sports Equipment (運動用具)</option>
+            <option value="Other">Other (その他)</option>
+        </select>
 
         <button
             type="submit"
-            id="searchButton"
-        >
+            id="searchButton">
             Search
         </button>
 
+        <hr>
     </form>
-
-    <hr>
 
     <!-- ================================
          SEARCH RESULTS
@@ -210,7 +246,7 @@
     </div>
 
     <!-- ================================
-         SEARCH FORM BEHAVIOUR
+         SCRIPT
          ================================ -->
 
     <script>
@@ -220,10 +256,6 @@
         });
     </script>
 
-    <!-- ================================
-         SCRIPT
-         ================================ -->
-
     <script src="script.js"></script>
 
     <!-- ================================
@@ -231,9 +263,8 @@
          ================================ -->
 
     <div class="version-label">
-        GF-01
+        GF-02
     </div>
-
 </body>
 
 </html>

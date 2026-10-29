@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Feedback - LostLink NTW</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="site-theme.css">
+</head>
+
+<body>
+    <header class="top-bar">
+        <div class="nexus">
+            <h1>
+                <a id="pageTitle" href="index.html">LostLink NTW</a>
+            </h1>
+            <p id="subTitle">Student Lost &amp; Found System</p>
+        </div>
+
+        <div class="language-box" aria-label="Language selection">
+            <button
+                type="button"
+                id="enButton"
+                onclick="setLanguage('EN')"
+                aria-label="Switch to English">
+                EN
+            </button>
+            <button
+                type="button"
+                id="jpButton"
+                onclick="setLanguage('JP')"
+                aria-label="日本語に切り替え">
+                JP
+            </button>
+        </div>
+    </header>
+
+    <hr>
+
+    <main>
+        <h2 id="feedbackTitle">Feedback</h2>
+
+        <p id="feedbackDescription">
+            We welcome your feedback to help improve this Project.
+            We value your input and suggestions, and we encourage you to share your thoughts with us.
+            Thankyou for taking the time to provide feedback and help us make this Project even better!
+        </p>
+
+        <p>
+            <a
+                class="nav-button"
+                id="feedbackFormLink"
+                href="https://docs.google.com/forms/d/e/1FAIpQLScUGhMva4P7aEyJycdnn165i-N4fvamvpP5gpqY8wHzKhPSoQ/viewform?usp=header"
+                target="_blank"
+                rel="noopener noreferrer">
+                Open Feedback Form
+            </a>
+        </p>
+    </main>
+
+    <footer class="version-label">
+        GF-02
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+
+</html>

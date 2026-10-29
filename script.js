@@ -122,7 +122,7 @@
 
             try {
                 const renderedResults = await Promise.all(
-                    results.map(async item => {
+                    results.map(async (item, index) => {
                         const name =
                             cleanText(item["Item name"] ?? item.name) ||
                             "Unknown item";
@@ -141,9 +141,7 @@
                             item["Date"] ??
                             item.date;
 
-                        const date = rawDate
-                            ? String(rawDate)
-                            : "Unknown";
+                        const date = rawDate ? String(rawDate) : "Unknown";
 
                         const photo =
                             cleanText(item["Photo"] ?? item.photo);
@@ -158,7 +156,7 @@
                             translateText(location, targetLang)
                         ]);
 
-                        // Ignore results from an outdated render.
+                        // Ignore outdated translations or renders.
                         if (
                             currentRenderId !== searchRenderId ||
                             renderLanguage !== language
@@ -167,24 +165,16 @@
                         }
 
                         const descriptionLabel =
-                            renderLanguage === "JP"
-                                ? "説明"
-                                : "Description";
+                            renderLanguage === "JP" ? "説明" : "Description";
 
                         const locationLabel =
-                            renderLanguage === "JP"
-                                ? "場所"
-                                : "Location";
+                            renderLanguage === "JP" ? "場所" : "Location";
 
                         const dateLabel =
-                            renderLanguage === "JP"
-                                ? "日付"
-                                : "Date";
+                            renderLanguage === "JP" ? "日付" : "Date";
 
                         const photoLabel =
-                            renderLanguage === "JP"
-                                ? "写真を見る"
-                                : "View Photo";
+                            renderLanguage === "JP" ? "写真を見る" : "View Photo";
 
                         return `
                             <div class="search-result">
@@ -210,13 +200,15 @@
                                 <br>
                                 ${dateLabel}:
                                 ${escapeHTML(date)}
+
+                                ${index < results.length - 1
+                                    ? '<hr class="result-separator">'
+                                    : ""}
                             </div>
-                            <hr>
                         `;
                     })
                 );
 
-                // Check again before updating the page.
                 if (
                     currentRenderId !== searchRenderId ||
                     renderLanguage !== language
@@ -227,10 +219,7 @@
                 resultsBox.innerHTML = renderedResults.join("");
 
             } catch (error) {
-                console.error(
-                    "Rendering search results failed:",
-                    error
-                );
+                console.error("Rendering search results failed:", error);
 
                 if (
                     currentRenderId === searchRenderId &&
@@ -255,73 +244,121 @@
 
         // Search using the Google Apps Script API.
 
-        async function searchItem() {
-            const searchBox = document.getElementById("searchBox");
-            const resultsBox = document.getElementById("results");
+        
+function normalizeSearchCategory(value) {
+    return String(value || "")
+        .trim()
+        .replace(/\s*\([^)]*\)\s*/g, "")
+        .toLowerCase();
+}
 
-            if (!searchBox || !resultsBox) return;
+async function searchItem() {
+    const searchBox = document.getElementById("searchBox");
+    const categorySelect = document.getElementById("categoryFilter");
+    const resultsBox = document.getElementById("results");
 
-            const keyword = searchBox.value.trim();
-            const currentRequestId = ++searchRequestId;
+    if (!searchBox || !resultsBox) return;
 
-            if (!keyword) {
-                resultsBox.innerText =
-                    language === "JP"
-                        ? "検索キーワードを入力してください。"
-                        : "Please enter a search keyword.";
-                lastSearchResults = null;
-                return;
-            }
+    const keyword = searchBox.value.trim();
+    const category = categorySelect
+        ? categorySelect.value
+        : "all";
 
-            resultsBox.innerText =
-                language === "JP" ? "検索中..." : "Searching...";
+    const currentRequestId = ++searchRequestId;
 
-            try {
-                // Detect Japanese independently of the display language.
-                const containsJapanese =
-                    /[\u3040-\u30ff\u3400-\u9fff]/.test(keyword);
+    if (!keyword && category === "all") {
+        lastSearchResults = null;
 
-                const targetSearchLang = containsJapanese ? "en" : "ja";
-                const translatedKeyword = await translateText(
-                    keyword,
-                    targetSearchLang
-                );
+        resultsBox.textContent =
+            language === "JP"
+                ? "キーワードを入力するか、カテゴリーを選択してください。"
+                : "Enter a keyword or select a category.";
 
-                if (currentRequestId !== searchRequestId) return;
+        return;
+    }
 
-                const url = new URL(API_URL);
-                url.searchParams.set("action", "search");
-                url.searchParams.set("q", keyword);
-                url.searchParams.set("q2", translatedKeyword);
+    resultsBox.textContent =
+        language === "JP" ? "検索中..." : "Searching...";
 
-                const response = await fetch(url.toString());
+    try {
+        const url = new URL(API_URL);
 
-                if (!response.ok) {
-                    throw new Error(`API request failed: HTTP ${response.status}`);
-                }
+        if (keyword) {
+            // Preserve bilingual keyword searching.
+            const containsJapanese =
+                /[\u3040-\u30ff\u3400-\u9fff]/.test(keyword);
 
-                const data = await response.json();
+            const targetSearchLang =
+                containsJapanese ? "en" : "ja";
 
-                if (!data.success || !Array.isArray(data.items)) {
-                    throw new Error(data.error || "Invalid API response");
-                }
+            const translatedKeyword = await translateText(
+                keyword,
+                targetSearchLang
+            );
 
-                if (currentRequestId !== searchRequestId) return;
+            if (currentRequestId !== searchRequestId) return;
 
-                lastSearchResults = data.items;
-                await renderSearchResults(data.items);
-
-            } catch (error) {
-                console.error("Search failed:", error);
-
-                if (currentRequestId !== searchRequestId) return;
-
-                resultsBox.innerText =
-                    language === "JP"
-                        ? "現在、アイテムを検索できません。"
-                        : "Unable to search the items right now.";
-            }
+            url.searchParams.set("action", "search");
+            url.searchParams.set("q", keyword);
+            url.searchParams.set("q2", translatedKeyword);
+        } else {
+            // Browse items in the selected category.
+            url.searchParams.set("action", "latest");
+            url.searchParams.set("limit", "1000");
         }
+
+        if (category !== "all") {
+            url.searchParams.set("category", category);
+        }
+
+        const response = await fetch(url.toString());
+
+        if (!response.ok) {
+            throw new Error(`API request failed: HTTP ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        if (!data.success || !Array.isArray(data.items)) {
+            throw new Error(data.error || "Invalid API response");
+        }
+
+        if (currentRequestId !== searchRequestId) return;
+
+        let results = data.items;
+
+        // Apply category matching even when the API already filters.
+        if (category !== "all") {
+            const selectedCategory =
+                normalizeSearchCategory(category);
+
+            results = results.filter(item => {
+                const itemCategory =
+                    item.category ??
+                    item["Category"] ??
+                    item["Item category"] ??
+                    "";
+
+                return normalizeSearchCategory(itemCategory) ===
+                    selectedCategory;
+            });
+        }
+
+        lastSearchResults = results;
+        await renderSearchResults(results);
+
+    } catch (error) {
+        if (currentRequestId !== searchRequestId) return;
+
+        console.error("Search failed:", error);
+
+        resultsBox.textContent =
+            language === "JP"
+                ? "現在、アイテムを検索できません。"
+                : "Unable to search the items right now.";
+    }
+}
+
 
 
         function refreshSearchResultsLanguage() {
@@ -606,7 +643,7 @@
 
             try {
                 const response = await fetch(
-                    `${API_URL}?action=latest&limit=3`
+                    `${API_URL}?action=latest&limit=4`
                 );
 
                 if (!response.ok) {
@@ -1194,11 +1231,32 @@
                 reportInstruction:
                     "Click the link below to open the report form:",
 
+                guidelineInstruction:
+                    "Please read the submission guidelines before submitting:",
+
+                guidelineLink:
+                    "Submission Guidelines (PDF)",
+
                 reportFormLink:
                     "Open Lost & Found Report Form",
 
+                feedbackTitle:
+                    "Feedback",
+
+                feedbackDescription:
+                    "We welcome your feedback to help improve this Project. We value your input and suggestions, and we encourage you to share your thoughts with us. Thank you for taking the time to provide feedback and help us make this Project even better!",
+
+                feedbackFormLink:
+                    "Open Feedback Form",
+
+                backHomeLink:
+                    "Back to Home",
+
                 searchTitle:
                     "Search",
+
+                categoryLabel:
+                    "Category (Optional):",
 
                 searchButton:
                     "Search",
@@ -1275,11 +1333,32 @@
                 reportInstruction:
                     "落とし物を報告するには、以下のリンクをクリックしてください：",
 
+                guidelineInstruction:
+                    "投稿前に、以下の投稿ガイドラインをお読みください：",
+
+                guidelineLink:
+                    "投稿ガイドライン（PDF）",
+
                 reportFormLink:
                     "忘れ物・落とし物レポートフォームを開く",
 
+                feedbackTitle:
+                    "ご意見・ご感想",
+
+                feedbackDescription:
+                    "本プロジェクトの改善に役立てるため、皆様からのご意見をお待ちしております。皆様からのご意見やご提案を大切にしておりますので、ぜひご感想をお寄せください。お時間を割いてご意見をお寄せいただき、本プロジェクトをさらに良いものにするお手伝いをいただき、誠にありがとうございます！",
+
+                feedbackFormLink:
+                    "フィードバックフォームを開く",
+
+                backHomeLink:
+                    "ホームに戻る",
+
                 searchTitle:
                     "検索",
+
+                categoryLabel:
+                    "カテゴリー (任意):",
 
                 searchButton:
                     "検索する",
