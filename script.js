@@ -603,7 +603,7 @@ async function searchItem() {
         const translationCache = new Map();
         const pendingTranslations = new Map();
         const translationRequestQueue = [];
-        const MAX_TRANSLATION_REQUESTS = 3;
+        const MAX_TRANSLATION_REQUESTS = 1;
         let activeTranslationRequests = 0;
 
         async function fetchTranslationWithLimit(url, options = {}) {
