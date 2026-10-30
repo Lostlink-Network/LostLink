@@ -662,11 +662,10 @@ async function searchItem() {
         }
 
         async function requestTranslation(text, target) {
-            window.translationDebug?.("FETCH TEST VERSION 2 - CORS + NO CACHE");
-            const url =
-                "https://translate.googleapis.com/translate_a/single" +
-                `?client=gtx&sl=auto&tl=${target}&dt=t&q=` +
-                encodeURIComponent(text);
+            const url = new URL(API_URL);
+            url.searchParams.set("action", "translate");
+            url.searchParams.set("target", target);
+            url.searchParams.set("text", text);
 
             for (let attempt = 0; attempt < 3; attempt += 1) {
                 try {
@@ -676,11 +675,16 @@ async function searchItem() {
                         text
                     });
 
-                    window.translationDebug?.("Sending translation request");
-                    const response = await fetchTranslationWithLimit(url, {
-                        mode: "cors",
-                        cache: "no-store"
-                    });
+                    window.translationDebug?.(
+                        "Sending translation request via LostLink API"
+                    );
+                    const response = await fetchTranslationWithLimit(
+                        url.toString(),
+                        {
+                            mode: "cors",
+                            cache: "no-store"
+                        }
+                    );
 
                     window.translationDebug?.("HTTP " + response.status);
                     console.info("[Translation] HTTP status:", response.status);
@@ -701,23 +705,32 @@ async function searchItem() {
                     }
 
                     if (!response.ok) {
-                        throw new Error(`HTTP ${response.status}`);
+                        const error = new Error(`HTTP ${response.status}`);
+                        error.retryable =
+                            response.status === 429 || response.status >= 500;
+                        throw error;
                     }
 
                     const data = await response.json();
-
-                    if (!Array.isArray(data[0])) {
-                        throw new Error("Unexpected translation response format");
+                    if (
+                        !data ||
+                        data.success !== true ||
+                        typeof data.translated !== "string"
+                    ) {
+                        const error = new Error(
+                            data?.error || "Invalid translation API response"
+                        );
+                        error.retryable = false;
+                        throw error;
                     }
 
-                    const translated = data[0]
-                        .map(part => part[0] || "")
-                        .join("");
-
-                    if (!translated.trim()) {
-                        throw new Error("Empty translation response");
+                    if (!data.translated.trim()) {
+                        const error = new Error("Empty translation response");
+                        error.retryable = false;
+                        throw error;
                     }
 
+                    const translated = data.translated;
                     window.translationDebug?.("Success: " + translated);
                     console.info("[Translation] Success:", {
                         target,
@@ -738,7 +751,7 @@ async function searchItem() {
                         error: error.message || String(error)
                     });
 
-                    if (attempt === 2) {
+                    if (attempt === 2 || error.retryable === false) {
                         throw error;
                     }
 
