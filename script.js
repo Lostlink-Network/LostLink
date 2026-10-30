@@ -599,7 +599,17 @@ async function searchItem() {
             }
 
             try {
-                return await fetch(url);
+                const controller = new AbortController();
+                const timeout = setTimeout(() => controller.abort(), 15000);
+
+                try {
+                    return await fetch(url, {
+                        signal: controller.signal,
+                        cache: "no-store"
+                    });
+                } finally {
+                    clearTimeout(timeout);
+                }
             } finally {
                 const nextRequest = translationRequestQueue.shift();
 
@@ -616,10 +626,10 @@ async function searchItem() {
                 response.headers && response.headers.get("Retry-After");
 
             if (retryAfter) {
-                const retryAfterSeconds = Number(retryAfter);
+                const seconds = Number(retryAfter);
 
-                if (Number.isFinite(retryAfterSeconds)) {
-                    return Math.min(retryAfterSeconds * 1000, 10000);
+                if (Number.isFinite(seconds)) {
+                    return Math.min(seconds * 1000, 10000);
                 }
 
                 const retryAt = Date.parse(retryAfter);
@@ -641,49 +651,78 @@ async function searchItem() {
                 encodeURIComponent(text);
 
             for (let attempt = 0; attempt < 3; attempt += 1) {
-                let response;
-
                 try {
-                    response = await fetchTranslationWithLimit(url);
+                    console.info("[Translation] Request:", {
+                        target,
+                        attempt: attempt + 1,
+                        text
+                    });
+
+                    const response =
+                        await fetchTranslationWithLimit(url);
+
+                    console.info("[Translation] HTTP status:", response.status);
+
+                    if (response.status === 429 || response.status >= 500) {
+                        if (attempt === 2) {
+                            throw new Error(`HTTP ${response.status}`);
+                        }
+
+                        await new Promise(resolve =>
+                            setTimeout(
+                                resolve,
+                                translationRetryDelay(response, attempt)
+                            )
+                        );
+
+                        continue;
+                    }
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+
+                    const data = await response.json();
+
+                    if (!Array.isArray(data[0])) {
+                        throw new Error("Unexpected translation response format");
+                    }
+
+                    const translated = data[0]
+                        .map(part => part[0] || "")
+                        .join("");
+
+                    if (!translated.trim()) {
+                        throw new Error("Empty translation response");
+                    }
+
+                    console.info("[Translation] Success:", {
+                        target,
+                        original: text,
+                        translated
+                    });
+
+                    return translated;
+
                 } catch (error) {
-                    if (attempt === 2) throw error;
+                    console.error("[Translation] Attempt failed:", {
+                        target,
+                        attempt: attempt + 1,
+                        text,
+                        error: error.message || String(error)
+                    });
+
+                    if (attempt === 2) {
+                        throw error;
+                    }
 
                     await new Promise(resolve =>
                         setTimeout(resolve, 500 * (2 ** attempt))
                     );
-                    continue;
                 }
-
-                if (response.status === 429 || response.status >= 500) {
-                    if (attempt === 2) {
-                        throw new Error(
-                            `Translation request failed: HTTP ${response.status}`
-                        );
-                    }
-
-                    await new Promise(resolve =>
-                        setTimeout(
-                            resolve,
-                            translationRetryDelay(response, attempt)
-                        )
-                    );
-                    continue;
-                }
-
-                if (!response.ok) {
-                    throw new Error(
-                        `Translation request failed: HTTP ${response.status}`
-                    );
-                }
-
-                const data = await response.json();
-
-                return Array.isArray(data[0])
-                    ? data[0].map(part => part[0] || "").join("")
-                    : "";
             }
 
-            return "";
+            throw new Error("Translation failed after three attempts");
         }
 
         async function translateText(text, targetLang) {
@@ -702,15 +741,15 @@ async function searchItem() {
 
             const translationPromise = requestTranslation(text, target)
                 .then(translated => {
-                    if (translated) {
-                        translationCache.set(cacheKey, translated);
-                        return translated;
-                    }
-
-                    return text;
+                    translationCache.set(cacheKey, translated);
+                    return translated;
                 })
                 .catch(error => {
-                    console.warn("Translation failed:", error);
+                    console.error("[Translation] Final failure:", {
+                        target,
+                        text,
+                        error: error.message || String(error)
+                    });
                     return text;
                 })
                 .finally(() => {
