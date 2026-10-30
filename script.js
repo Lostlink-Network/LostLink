@@ -606,7 +606,7 @@ async function searchItem() {
         const MAX_TRANSLATION_REQUESTS = 3;
         let activeTranslationRequests = 0;
 
-        async function fetchTranslationWithLimit(url) {
+        async function fetchTranslationWithLimit(url, options = {}) {
             if (activeTranslationRequests >= MAX_TRANSLATION_REQUESTS) {
                 await new Promise(resolve => {
                     translationRequestQueue.push(resolve);
@@ -621,8 +621,8 @@ async function searchItem() {
 
                 try {
                     return await fetch(url, {
-                        signal: controller.signal,
-                        cache: "no-store"
+                        ...options,
+                        signal: controller.signal
                     });
                 } finally {
                     clearTimeout(timeout);
@@ -676,8 +676,10 @@ async function searchItem() {
                     });
 
                     window.translationDebug?.("Sending translation request");
-                    const response =
-                        await fetchTranslationWithLimit(url);
+                    const response = await fetchTranslationWithLimit(url, {
+                        mode: "cors",
+                        cache: "no-store"
+                    });
 
                     window.translationDebug?.("HTTP " + response.status);
                     console.info("[Translation] HTTP status:", response.status);
