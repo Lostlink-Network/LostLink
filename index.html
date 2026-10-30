@@ -420,5 +420,25 @@
     <!-- Existing website functionality -->
     <script src="script.js?v=20261030-translation-fix"></script>
 
+    <div id="translationDebug" style="
+        position: fixed;
+        bottom: 10px;
+        right: 10px;
+        width: 280px;
+        max-height: 220px;
+        overflow-y: auto;
+        background: #ffffff;
+        color: #222222;
+        border: 1px solid #888888;
+        border-radius: 8px;
+        padding: 10px;
+        z-index: 99999;
+        font-size: 12px;
+        font-family: monospace;
+    ">
+        <strong>Translation Diagnostics</strong>
+        <div id="translationDebugLog">Waiting for translation...</div>
+    </div>
+
 </body>
 </html>

@@ -6,6 +6,23 @@
         // ==========================================
         // PAGE SCROL==============================
 
+        // ========================================
+        // TRANSLATION DIAGNOSTIC PANEL
+        // ========================================
+
+        function translationDebug(message) {
+            const panel = document.getElementById("translationDebugLog");
+
+            if (!panel) return;
+
+            const line = document.createElement("div");
+            line.textContent =
+                new Date().toLocaleTimeString() + " - " + message;
+
+            panel.appendChild(line);
+            panel.scrollTop = panel.scrollHeight;
+        }
+
         if ("scrollRestoration" in history) {
             history.scrollRestoration = "manual";
         }
@@ -661,6 +678,7 @@ async function searchItem() {
                     const response =
                         await fetchTranslationWithLimit(url);
 
+                    translationDebug("HTTP status: " + response.status);
                     console.info("[Translation] HTTP status:", response.status);
 
                     if (response.status === 429 || response.status >= 500) {
@@ -696,6 +714,7 @@ async function searchItem() {
                         throw new Error("Empty translation response");
                     }
 
+                    translationDebug("Success: " + translated);
                     console.info("[Translation] Success:", {
                         target,
                         original: text,
@@ -705,6 +724,9 @@ async function searchItem() {
                     return translated;
 
                 } catch (error) {
+                    translationDebug(
+                        "ERROR: " + (error.message || String(error))
+                    );
                     console.error("[Translation] Attempt failed:", {
                         target,
                         attempt: attempt + 1,
@@ -728,6 +750,8 @@ async function searchItem() {
         async function translateText(text, targetLang) {
             if (!text) return text;
 
+            translationDebug("Request: " + targetLang + " | " + text);
+
             const target = targetLang.toLowerCase();
             const cacheKey = `${target}:${text}`;
 
@@ -745,6 +769,9 @@ async function searchItem() {
                     return translated;
                 })
                 .catch(error => {
+                    translationDebug(
+                        "ERROR: " + (error.message || String(error))
+                    );
                     console.error("[Translation] Final failure:", {
                         target,
                         text,
