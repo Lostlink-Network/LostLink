@@ -116,6 +116,67 @@
     </style>
 
     <link rel="stylesheet" href="site-theme.css">
+    <style>
+        @media (max-width: 700px) {
+            .latest-filter {
+                flex-wrap: nowrap;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .latest-filter label,
+            .latest-filter select {
+                flex: 0 0 auto;
+            }
+
+            .latest-filter select {
+                width: auto;
+                max-width: none;
+                min-width: 220px;
+            }
+
+            #allLatestItems {
+                grid-template-columns: minmax(0, 1fr);
+                column-gap: 0;
+            }
+
+            #allLatestItems .latest-item {
+                display: flex;
+                flex-direction: column;
+            }
+
+            #allLatestItems .latest-name {
+                order: 0;
+            }
+
+            #allLatestItems .latest-category {
+                order: 1;
+            }
+
+            #allLatestItems .latest-description {
+                order: 2;
+            }
+
+            #allLatestItems .latest-location {
+                order: 3;
+            }
+
+            #allLatestItems .latest-date {
+                order: 4;
+            }
+
+            #allLatestItems .latest-photo {
+                order: 5;
+            }
+
+            #allLatestItems hr {
+                display: block;
+                grid-column: 1 / -1;
+                width: 100%;
+                margin: 6px 0;
+            }
+        }
+    </style>
 </head>
 
 <body>
@@ -189,7 +250,7 @@
         Loading...
     </div>
 
-    <script src="script.js"></script>
+    <script src="script.js?v=20261030-translation-fix"></script>
 
     <div class="version-label">
         GF-02

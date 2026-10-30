@@ -96,6 +96,11 @@
         let lastSearchResults = null;
         let searchRequestId = 0;
         let searchRenderId = 0;
+        let lastHomepageItems = null;
+        let homepageItemsRenderId = 0;
+        const allLatestPageCache = new Map();
+        let latestCurrentPage = 1;
+        let allLatestRenderId = 0;
 
         // Render search results in the selected language.
 
@@ -598,9 +603,21 @@ async function searchItem() {
                 activeTranslationRequests += 1;
             }
 
+            const controller =
+                typeof AbortController === "undefined"
+                    ? null
+                    : new AbortController();
+            const timeoutId = controller
+                ? setTimeout(() => controller.abort(), 15000)
+                : null;
+
             try {
-                return await fetch(url);
+                const options = { cache: "no-store" };
+                if (controller) options.signal = controller.signal;
+                return await fetch(url, options);
             } finally {
+                if (timeoutId !== null) clearTimeout(timeoutId);
+
                 const nextRequest = translationRequestQueue.shift();
 
                 if (nextRequest) {
@@ -646,7 +663,15 @@ async function searchItem() {
                 try {
                     response = await fetchTranslationWithLimit(url);
                 } catch (error) {
-                    if (attempt === 2) throw error;
+                    if (attempt === 2) {
+                        const reason =
+                            error.name === "AbortError"
+                                ? "request timed out or was aborted"
+                                : error.message;
+                        throw new Error(
+                            `Translation network request failed for ${target}: ${reason}`
+                        );
+                    }
 
                     await new Promise(resolve =>
                         setTimeout(resolve, 500 * (2 ** attempt))
@@ -655,6 +680,12 @@ async function searchItem() {
                 }
 
                 if (response.status === 429 || response.status >= 500) {
+                    console.warn("Translation service returned a retryable status.", {
+                        status: response.status,
+                        target,
+                        attempt: attempt + 1
+                    });
+
                     if (attempt === 2) {
                         throw new Error(
                             `Translation request failed: HTTP ${response.status}`
@@ -672,18 +703,58 @@ async function searchItem() {
 
                 if (!response.ok) {
                     throw new Error(
-                        `Translation request failed: HTTP ${response.status}`
+                        `Translation request failed for ${target}: HTTP ${response.status}`
                     );
                 }
 
-                const data = await response.json();
+                let data;
+                try {
+                    data = await response.json();
+                } catch (error) {
+                    if (attempt === 2) {
+                        throw new Error(
+                            `Translation response was not valid JSON for ${target}: ${error.message}`
+                        );
+                    }
 
-                return Array.isArray(data[0])
+                    await new Promise(resolve =>
+                        setTimeout(resolve, 500 * (2 ** attempt))
+                    );
+                    continue;
+                }
+
+                const translated = Array.isArray(data[0])
                     ? data[0].map(part => part[0] || "").join("")
                     : "";
+
+                if (!translated) {
+                    throw new Error(
+                        `Translation response was empty for ${target}.`
+                    );
+                }
+
+                const sourceLanguage =
+                    typeof data[2] === "string"
+                        ? data[2].toLowerCase()
+                        : "";
+                const containsJapanese =
+                    /[\u3040-\u30ff\u3400-\u9fff]/.test(text);
+
+                if (
+                    translated === text &&
+                    sourceLanguage !== target &&
+                    ((target === "en" && containsJapanese) ||
+                        (target === "ja" && sourceLanguage === "en"))
+                ) {
+                    throw new Error(
+                        `Translation response was unchanged for ${target} (detected source: ${sourceLanguage || "unknown"}).`
+                    );
+                }
+
+                return translated;
             }
 
-            return "";
+            throw new Error(`Translation failed after retries for ${target}.`);
         }
 
         async function translateText(text, targetLang) {
@@ -702,16 +773,16 @@ async function searchItem() {
 
             const translationPromise = requestTranslation(text, target)
                 .then(translated => {
-                    if (translated) {
-                        translationCache.set(cacheKey, translated);
-                        return translated;
-                    }
-
-                    return text;
+                    translationCache.set(cacheKey, translated);
+                    return translated;
                 })
                 .catch(error => {
-                    console.warn("Translation failed:", error);
-                    return text;
+                    console.error("Translation failed.", {
+                        target,
+                        online: navigator.onLine,
+                        error: error.message
+                    });
+                    throw error;
                 })
                 .finally(() => {
                     pendingTranslations.delete(cacheKey);
@@ -732,29 +803,37 @@ async function searchItem() {
             const container = document.getElementById("latestItems");
             if (!container) return;
 
+            const currentRenderId = ++homepageItemsRenderId;
             const renderLanguage = language;
 
             container.textContent =
                 renderLanguage === "JP" ? "読み込み中..." : "Loading...";
 
             try {
-                const response = await fetch(
-                    `${API_URL}?action=latest&limit=4`
-                );
+                if (!Array.isArray(lastHomepageItems)) {
+                    const response = await fetch(
+                        `${API_URL}?action=latest&limit=4`
+                    );
 
-                if (!response.ok) {
-                    throw new Error("LostLink API request failed.");
+                    if (!response.ok) {
+                        throw new Error("LostLink API request failed.");
+                    }
+
+                    const data = await response.json();
+
+                    if (!data.success || !Array.isArray(data.items)) {
+                        throw new Error(data.error || "Invalid API response.");
+                    }
+
+                    lastHomepageItems = data.items;
                 }
 
-                const data = await response.json();
+                if (
+                    currentRenderId !== homepageItemsRenderId ||
+                    renderLanguage !== language
+                ) return;
 
-                if (!data.success || !Array.isArray(data.items)) {
-                    throw new Error(data.error || "Invalid API response.");
-                }
-
-                if (renderLanguage !== language) return;
-
-                const recent = data.items;
+                const recent = lastHomepageItems;
 
                 if (recent.length === 0) {
                     container.textContent =
@@ -836,14 +915,20 @@ async function searchItem() {
                     })
                 );
 
-                if (renderLanguage !== language) return;
+                if (
+                    currentRenderId !== homepageItemsRenderId ||
+                    renderLanguage !== language
+                ) return;
 
                 container.innerHTML = cards.join("");
 
             } catch (error) {
                 console.error("Homepage latest items error:", error);
 
-                if (renderLanguage !== language) return;
+                if (
+                    currentRenderId !== homepageItemsRenderId ||
+                    renderLanguage !== language
+                ) return;
 
                 container.textContent =
                     renderLanguage === "JP"
@@ -860,6 +945,8 @@ async function searchItem() {
         // ========================================
 
         function filterLatestItems() {
+            allLatestPageCache.clear();
+            latestCurrentPage = 1;
             loadAllLatestItems(1);
         }
 
@@ -868,6 +955,7 @@ async function searchItem() {
             if (!container) return;
 
             const ITEMS_PER_PAGE = 20;
+            const currentRenderId = ++allLatestRenderId;
             const renderLanguage = language;
             const categoryFilter =
                 document.getElementById("latestCategoryFilter")?.value || "";
@@ -879,41 +967,55 @@ async function searchItem() {
                 renderLanguage === "JP" ? "読み込み中..." : "Loading...";
 
             try {
-                // Request one page of approved items from the API.
-                const offset = (page - 1) * ITEMS_PER_PAGE;
-                const url = new URL(API_URL);
+                const cacheKey = `${categoryFilter}:${page}`;
+                let cachedPage = allLatestPageCache.get(cacheKey);
 
-                url.searchParams.set("action", "latest");
-                url.searchParams.set("limit", String(ITEMS_PER_PAGE));
-                url.searchParams.set("offset", String(offset));
+                if (!cachedPage) {
+                    const offset = (page - 1) * ITEMS_PER_PAGE;
+                    const url = new URL(API_URL);
 
-                // Filter by category on the server.
-                if (categoryFilter) {
-                    url.searchParams.set("category", categoryFilter);
+                    url.searchParams.set("action", "latest");
+                    url.searchParams.set("limit", String(ITEMS_PER_PAGE));
+                    url.searchParams.set("offset", String(offset));
+
+                    if (categoryFilter) {
+                        url.searchParams.set("category", categoryFilter);
+                    }
+
+                    const response = await fetch(url.toString());
+
+                    if (!response.ok) {
+                        throw new Error(
+                            `API request failed: HTTP ${response.status}`
+                        );
+                    }
+
+                    const data = await response.json();
+
+                    if (!data.success || !Array.isArray(data.items)) {
+                        throw new Error(
+                            data.error || "Invalid API response."
+                        );
+                    }
+
+                    const totalItems = Number.isFinite(Number(data.total))
+                        ? Number(data.total)
+                        : data.items.length;
+
+                    cachedPage = {
+                        items: data.items,
+                        totalItems
+                    };
+                    allLatestPageCache.set(cacheKey, cachedPage);
                 }
 
-                const response = await fetch(url.toString());
+                if (
+                    currentRenderId !== allLatestRenderId ||
+                    renderLanguage !== language
+                ) return;
 
-                if (!response.ok) {
-                    throw new Error(
-                        `API request failed: HTTP ${response.status}`
-                    );
-                }
-
-                const data = await response.json();
-
-                if (!data.success || !Array.isArray(data.items)) {
-                    throw new Error(
-                        data.error || "Invalid API response."
-                    );
-                }
-
-                if (renderLanguage !== language) return;
-
-                const pageItems = data.items;
-                const totalItems = Number.isFinite(Number(data.total))
-                    ? Number(data.total)
-                    : pageItems.length;
+                const pageItems = cachedPage.items;
+                const totalItems = cachedPage.totalItems;
 
                 const totalPages = Math.max(
                     1,
@@ -921,6 +1023,7 @@ async function searchItem() {
                 );
 
                 page = Math.max(1, Math.min(page, totalPages));
+                latestCurrentPage = page;
 
                 if (pageItems.length === 0) {
                     container.textContent =
@@ -938,7 +1041,7 @@ async function searchItem() {
                     renderLanguage === "JP" ? "ja" : "en";
 
                 const cards = await Promise.all(
-                    pageItems.map(async item => {
+                    pageItems.map(async (item, index) => {
                         const name =
                             cleanText(item.name) || "Unknown item";
 
@@ -995,36 +1098,49 @@ async function searchItem() {
 
                         return `
                             <div class="latest-item">
-                                <strong>${escapeHTML(displayName)}</strong><br>
+                                <strong class="latest-name">${escapeHTML(displayName)}</strong>
 
                                 ${displayCategory ? `
+                                    <div class="latest-category">
                                     ${categoryLabel}
-                                    ${escapeHTML(displayCategory)}<br>
+                                    ${escapeHTML(displayCategory)}
+                                    </div>
                                 ` : ""}
 
                                 ${photo ? `
+                                    <div class="latest-photo">
                                     <a
                                         href="${escapeHTML(photo)}"
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                    >${photoLabel}</a><br>
+                                    >${photoLabel}</a>
+                                    </div>
                                 ` : ""}
 
+                                <div class="latest-description">
                                 ${descriptionLabel}
-                                ${escapeHTML(displayDescription)}<br>
+                                ${escapeHTML(displayDescription)}
+                                </div>
 
+                                <div class="latest-location">
                                 ${locationLabel}
-                                ${escapeHTML(displayLocation)}<br>
+                                ${escapeHTML(displayLocation)}
+                                </div>
 
+                                <div class="latest-date">
                                 ${dateLabel}
                                 ${escapeHTML(date)}
+                                </div>
                             </div>
-                            <hr>
+                            ${index < pageItems.length - 1 ? "<hr>" : ""}
                         `;
                     })
                 );
 
-                if (renderLanguage !== language) return;
+                if (
+                    currentRenderId !== allLatestRenderId ||
+                    renderLanguage !== language
+                ) return;
 
                 const previousLabel =
                     renderLanguage === "JP" ? "前へ" : "Previous";
@@ -1075,7 +1191,10 @@ async function searchItem() {
             } catch (error) {
                 console.error("Latest items error:", error);
 
-                if (renderLanguage !== language) return;
+                if (
+                    currentRenderId !== allLatestRenderId ||
+                    renderLanguage !== language
+                ) return;
 
                 container.textContent =
                     renderLanguage === "JP"
@@ -1231,7 +1350,7 @@ async function searchItem() {
         }
 
         if (typeof loadAllLatestItems === "function") {
-            loadAllLatestItems();
+            loadAllLatestItems(latestCurrentPage);
         }
 
         if (typeof refreshSearchResultsLanguage === "function") {
