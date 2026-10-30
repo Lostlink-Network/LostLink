@@ -7,10 +7,10 @@
         // PAGE SCROL==============================
 
         // ========================================
-        // TRANSLATION DIAGNOSTIC PANEL
+        // LOSTLINK DIAGNOSTICS
         // ========================================
 
-        function translationDebug(message) {
+        window.translationDebug = function (message) {
             const panel = document.getElementById("translationDebugLog");
 
             if (!panel) return;
@@ -21,7 +21,7 @@
 
             panel.appendChild(line);
             panel.scrollTop = panel.scrollHeight;
-        }
+        };
 
         if ("scrollRestoration" in history) {
             history.scrollRestoration = "manual";
@@ -675,10 +675,11 @@ async function searchItem() {
                         text
                     });
 
+                    window.translationDebug?.("Sending translation request");
                     const response =
                         await fetchTranslationWithLimit(url);
 
-                    translationDebug("HTTP status: " + response.status);
+                    window.translationDebug?.("HTTP " + response.status);
                     console.info("[Translation] HTTP status:", response.status);
 
                     if (response.status === 429 || response.status >= 500) {
@@ -714,7 +715,7 @@ async function searchItem() {
                         throw new Error("Empty translation response");
                     }
 
-                    translationDebug("Success: " + translated);
+                    window.translationDebug?.("Success: " + translated);
                     console.info("[Translation] Success:", {
                         target,
                         original: text,
@@ -724,7 +725,7 @@ async function searchItem() {
                     return translated;
 
                 } catch (error) {
-                    translationDebug(
+                    window.translationDebug?.(
                         "ERROR: " + (error.message || String(error))
                     );
                     console.error("[Translation] Attempt failed:", {
@@ -750,7 +751,9 @@ async function searchItem() {
         async function translateText(text, targetLang) {
             if (!text) return text;
 
-            translationDebug("Request: " + targetLang + " | " + text);
+            window.translationDebug?.(
+                "Translation called. Target: " + targetLang
+            );
 
             const target = targetLang.toLowerCase();
             const cacheKey = `${target}:${text}`;
@@ -769,8 +772,8 @@ async function searchItem() {
                     return translated;
                 })
                 .catch(error => {
-                    translationDebug(
-                        "ERROR: " + (error.message || String(error))
+                    window.translationDebug?.(
+                        "Translation error: " + error.message
                     );
                     console.error("[Translation] Final failure:", {
                         target,
@@ -1672,8 +1675,49 @@ async function searchItem() {
                 updateLanguageButtons();
 
                 applyTranslations();
+
+                const debugPanel =
+                    document.getElementById("debugPopup");
+                const closeButton =
+                    document.getElementById("closeDebug");
+
+                if (debugPanel && closeButton) {
+                    closeButton.addEventListener("click", function () {
+                        debugPanel.classList.remove("active");
+                    });
+                }
             }
         );
+
+        // ========================================
+        // HIDDEN DIAGNOSTICS SHORTCUT
+        // ========================================
+
+        document.addEventListener("DOMContentLoaded", function () {
+            const title = document.getElementById("lostlinkTitle");
+            const popup = document.getElementById("debugPopup");
+
+            if (!title || !popup) return;
+
+            let clickCount = 0;
+            let clickTimer;
+
+            title.addEventListener("click", function (event) {
+                event.preventDefault();
+                clickCount += 1;
+                clearTimeout(clickTimer);
+
+                if (clickCount >= 7) {
+                    popup.classList.add("active");
+                    clickCount = 0;
+                    return;
+                }
+
+                clickTimer = setTimeout(function () {
+                    clickCount = 0;
+                }, 5000);
+            });
+        });
 
 
         // ========================================

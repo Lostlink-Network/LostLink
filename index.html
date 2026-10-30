@@ -257,6 +257,41 @@
             opacity: 0.6;
         }
 
+        .debug-popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: min(90%, 450px);
+            max-height: 70vh;
+            overflow-y: auto;
+            background: white;
+            color: #222;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            padding: 16px;
+            z-index: 999999;
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.25);
+            font-size: 13px;
+        }
+
+        .debug-popup.active {
+            display: block;
+        }
+
+        .debug-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        #translationDebugLog {
+            overflow-wrap: anywhere;
+            white-space: pre-wrap;
+        }
+
         /* ==================================================
            MOBILE LAYOUT
            ================================================== */
@@ -319,7 +354,7 @@
     <header class="top-bar">
 
         <div class="nexus">
-            <h1>LostLink NTW</h1>
+            <h1><a href="index.html" id="lostlinkTitle">LostLink NTW</a></h1>
             <p id="subTitle">Student Lost &amp; Found System</p>
         </div>
 
@@ -418,26 +453,15 @@
     </footer>
 
     <!-- Existing website functionality -->
-    <script src="script.js?v=20261030-translation-fix"></script>
+    <script src="script.js?v=20261030-debug-popup"></script>
 
-    <div id="translationDebug" style="
-        position: fixed;
-        bottom: 10px;
-        right: 10px;
-        width: 280px;
-        max-height: 220px;
-        overflow-y: auto;
-        background: #ffffff;
-        color: #222222;
-        border: 1px solid #888888;
-        border-radius: 8px;
-        padding: 10px;
-        z-index: 99999;
-        font-size: 12px;
-        font-family: monospace;
-    ">
-        <strong>Translation Diagnostics</strong>
-        <div id="translationDebugLog">Waiting for translation...</div>
+    <div id="debugPopup" class="debug-popup">
+        <div class="debug-header">
+            <strong>LostLink Diagnostics</strong>
+            <button type="button" id="closeDebug">Close</button>
+        </div>
+
+        <div id="translationDebugLog">Diagnostics ready.</div>
     </div>
 
 </body>
