@@ -1,4 +1,4 @@
-        // ========================================
+ // ========================================
         // PRJ LOSTLINK - MAIN JAVASCRIPT
         // ========================================
 
@@ -678,36 +678,12 @@ async function searchItem() {
 
                 const data = await response.json();
 
-                const translated = Array.isArray(data[0])
+                return Array.isArray(data[0])
                     ? data[0].map(part => part[0] || "").join("")
                     : "";
-
-                if (!translated) {
-                    throw new Error(
-                        "Translation response did not contain translated text."
-                    );
-                }
-
-                const hasJapanese =
-                    /[\u3040-\u30FF\u3400-\u9FFF]/.test(text);
-                const hasEnglish = /[A-Za-z]/.test(text);
-                const needsTranslation =
-                    (target === "en" && hasJapanese) ||
-                    (target === "ja" && hasEnglish);
-
-                if (
-                    translated === text &&
-                    needsTranslation
-                ) {
-                    throw new Error(
-                        `Translation response was unchanged for ${target}.`
-                    );
-                }
-
-                return translated;
             }
 
-            throw new Error(`Translation failed after retries for ${target}.`);
+            return "";
         }
 
         async function translateText(text, targetLang) {
@@ -724,33 +700,22 @@ async function searchItem() {
                 return pendingTranslations.get(cacheKey);
             }
 
-            const translationPromise = (async () => {
-                try {
-                    const translated = await requestTranslation(text, target);
-
-                    if (!translated || translated.trim() === text.trim()) {
-                        console.warn("Translation unchanged:", {
-                            text,
-                            target
-                        });
-
-                        return text;
+            const translationPromise = requestTranslation(text, target)
+                .then(translated => {
+                    if (translated) {
+                        translationCache.set(cacheKey, translated);
+                        return translated;
                     }
 
-                    translationCache.set(cacheKey, translated);
-                    return translated;
-                } catch (error) {
-                    console.warn("Translation failed:", {
-                        text,
-                        target,
-                        error
-                    });
-
                     return text;
-                } finally {
+                })
+                .catch(error => {
+                    console.warn("Translation failed:", error);
+                    return text;
+                })
+                .finally(() => {
                     pendingTranslations.delete(cacheKey);
-                }
-            })();
+                });
 
             pendingTranslations.set(cacheKey, translationPromise);
             return translationPromise;
@@ -913,8 +878,6 @@ async function searchItem() {
             container.textContent =
                 renderLanguage === "JP" ? "読み込み中..." : "Loading...";
 
-            let failureStage = "API request";
-
             try {
                 // Request one page of approved items from the API.
                 const offset = (page - 1) * ITEMS_PER_PAGE;
@@ -929,48 +892,20 @@ async function searchItem() {
                     url.searchParams.set("category", categoryFilter);
                 }
 
-                let response;
-                try {
-                    response = await fetch(url.toString());
-                } catch (error) {
-                    throw new Error(
-                        `Network/CORS failure: ${error.message}`
-                    );
-                }
+                const response = await fetch(url.toString());
 
                 if (!response.ok) {
                     throw new Error(
-                        `API returned HTTP ${response.status} ${response.statusText}.`
+                        `API request failed: HTTP ${response.status}`
                     );
                 }
 
-                failureStage = "JSON response";
-                const contentType =
-                    response.headers.get("content-type") || "unknown content type";
-                const responseText = await response.text();
-                let data;
+                const data = await response.json();
 
-                try {
-                    data = JSON.parse(responseText);
-                } catch (error) {
+                if (!data.success || !Array.isArray(data.items)) {
                     throw new Error(
-                        `Invalid JSON (HTTP ${response.status}, ${contentType}): ${error.message}`
+                        data.error || "Invalid API response."
                     );
-                }
-
-                failureStage = "API response structure";
-                if (!data || typeof data !== "object" || Array.isArray(data)) {
-                    throw new Error("Expected a JSON object in the API response.");
-                }
-
-                if (data.success !== true) {
-                    throw new Error(
-                        `API reported failure: ${String(data.error || "no error detail provided").slice(0, 240)}`
-                    );
-                }
-
-                if (!Array.isArray(data.items)) {
-                    throw new Error("API response is missing an items array.");
                 }
 
                 if (renderLanguage !== language) return;
@@ -1002,7 +937,6 @@ async function searchItem() {
                 const targetLang =
                     renderLanguage === "JP" ? "ja" : "en";
 
-                failureStage = "item translation/rendering";
                 const cards = await Promise.all(
                     pageItems.map(async item => {
                         const name =
@@ -1139,19 +1073,14 @@ async function searchItem() {
                 container.innerHTML = cards.join("") + pagination;
 
             } catch (error) {
-                const errorDetail =
-                    error instanceof Error ? error.message : String(error);
-                console.error("Latest items error.", {
-                    stage: failureStage,
-                    detail: errorDetail
-                });
+                console.error("Latest items error:", error);
 
                 if (renderLanguage !== language) return;
 
                 container.textContent =
                     renderLanguage === "JP"
-                        ? `最新アイテムを読み込めませんでした（${failureStage}: ${errorDetail}）`
-                        : `Unable to load latest items (${failureStage}: ${errorDetail})`;
+                        ? "最新アイテムを読み込めませんでした。"
+                        : "Unable to load latest items.";
             }
         }
 
@@ -1371,17 +1300,47 @@ async function searchItem() {
                 pageSubtitle:
                     "System Description",
 
+                devTagline:
+                    "Lost, Found, Reconnected.",
+
+                devPrivacyTitle:
+                    "Here LostLink, We value your Privacy and Security",
+
+                devPrivacyDescription:
+                    "We Protect Your Privacy and Ensure the Security of Your Data",
+
+                devDataDescription:
+                    "We ensure we take no personal data from you and your device",
+
+                devDescriptionTitle:
+                    "Description of the system",
+
+                devDescriptionText:
+                    "We are a student lost and found system designed to help students locate their lost items and reconnect with them.",
+
+                devThanksText:
+                    "This system was created with help of NEXUS. Thankyou very much for your support.",
+
                 creatorLabel:
                     "Creator and Maintainer (Nickname):",
 
+                devCreatorName:
+                    "Enagetic Cat",
+
                 ownerLabel:
                     "System Owned by:",
+
+                devOwnerName:
+                    "Programing Circle",
 
                 poweredLabel:
                     "This System is Powered by",
 
                 githubTitle:
                     "Git-Hub",
+
+                devNexusDescription:
+                    "Networked EXchange & Unified Search",
 
                 warningText:
                     "WARNING: This system tend to have technical errors with Google Chrome (MOBILE).",
@@ -1473,17 +1432,47 @@ async function searchItem() {
                 pageSubtitle:
                     "システム詳細",
 
+                devTagline:
+                    "Lost, Found, Reconnected.",
+
+                devPrivacyTitle:
+                    "LostLinkは皆様のプライバシーと安全を大切にしています",
+
+                devPrivacyDescription:
+                    "皆様のプライバシーを守り、データの安全を確保します。",
+
+                devDataDescription:
+                    "皆様やお使いの端末から個人情報を取得することはありません。",
+
+                devDescriptionTitle:
+                    "システムの説明",
+
+                devDescriptionText:
+                    "LostLinkは、学生が落とし物を探し、持ち主のもとへ返すための学生向け落とし物サービスです。",
+
+                devThanksText:
+                    "このシステムはNEXUSの協力により制作されました。ご支援に心より感謝いたします。",
+
                 creatorLabel:
-                    "本サイトの持管理者のニックネーム：",
+                    "制作者・管理者（ニックネーム）：",
+
+                devCreatorName:
+                    "Enagetic Cat",
 
                 ownerLabel:
                     "システム所有者：",
 
+                devOwnerName:
+                    "プログラミングサークル",
+
                 poweredLabel:
-                    "このシステムは次のサービスを利用し稼働しています：",
+                    "このシステムは次世代の技術で駆動しています",
 
                 githubTitle:
-                    "Git-Hub",
+                    "GitHub",
+
+                devNexusDescription:
+                    "ネットワーク型の交換・統合検索システム",
 
                 warningText:
                     "警告：このシステムはGoogle Chrome（モバイル）で技術的なエラーが発生します。",

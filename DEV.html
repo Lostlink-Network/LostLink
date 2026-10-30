@@ -16,6 +16,11 @@
 
 <style>
 
+    :root {
+        /* Adjust this value to change spacing between text throughout this page. */
+        --text-gap: 0.25em;
+    }
+
     * {
         box-sizing: border-box;
     }
@@ -55,12 +60,12 @@
     }
 
     .nexus h1 {
-        margin: 0;
+        margin-block: var(--text-gap);
         line-height: 1.1;
     }
 
     .nexus p {
-        margin: 0;
+        margin-block: var(--text-gap);
         line-height: 1.1;
     }
 
@@ -94,11 +99,11 @@
        ================================ */
 
     .info-group p {
-        margin: 0;
+        margin-block: var(--text-gap);
     }
 
     .info-group + .info-group {
-        margin-top: 15px;
+        margin-top: var(--text-gap);
     }
 
     /* ================================
@@ -106,15 +111,15 @@
        ================================ */
 
     .powered-by {
-        --spacing: 5px;
+        --spacing: var(--text-gap);
     }
 
     .powered-by p {
-        margin-bottom: var(--spacing);
+        margin-block: var(--spacing);
     }
 
     .powered-by h1 {
-        margin-top: 0;
+        margin-block: var(--text-gap);
     }
 
     /* ================================
@@ -122,11 +127,11 @@
        ================================ */
 
     .nexus-section h1 {
-        margin-bottom: 0;
+        margin-block: var(--text-gap);
     }
 
     .nexus-section p {
-        margin-top: 0;
+        margin-block: var(--text-gap);
     }
 
     /* ================================
@@ -135,7 +140,7 @@
 
     .version-label {
         text-align: center;
-        margin-top: 30px;
+        margin-top: var(--text-gap);
         padding: 10px;
         font-size: 12px;
         opacity: 0.6;
@@ -144,6 +149,15 @@
 </style>
 
 <link rel="stylesheet" href="site-theme.css">
+<style>
+    body :is(h1, h2, h3, h4, h5, h6, p, li, blockquote, dt, dd) {
+        margin-block: var(--text-gap);
+    }
+
+    body hr {
+        margin-block: var(--text-gap);
+    }
+</style>
 
 <script>
 
@@ -194,10 +208,75 @@
 
 <hr>
 
-<h1>Here LostLink, We value your Privacy and Security</h1>
-<p>We Protect Your Privacy and Ensure the Security of Your Data</p>
-<p>We ensure we take no personal data from you and your device</p>
+<h1 id="devTagline">Lost, Found, Reconnected.</h1>
 
+<hr>
+
+<h1 id="devPrivacyTitle">Here LostLink, We value your Privacy and Security</h1>
+<p id="devPrivacyDescription">We Protect Your Privacy and Ensure the Security of Your Data</p>
+<p id="devDataDescription">We ensure we take no personal data from you and your device</p>
+
+<hr>
+
+<h1 id="devDescriptionTitle">Description of the system</h1>
+<p id="devDescriptionText">We are a student lost and found system designed to help students locate their lost items and reconnect with them.</p>
+<p id="devThanksText">This system was created with help of NEXUS. Thankyou very much for your support.</p>
+
+<hr>
+
+<p>
+    <u id="creatorLabel">
+        Creator and Maintainer (Nickname):
+    </u>
+</p>
+
+<p id="devCreatorName">Enagetic Cat</p>
+
+</div>
+
+<div class="info-group">
+
+<p>
+    <u id="ownerLabel">
+        System Owned by:
+    </u>
+</p>
+
+<p id="devOwnerName">Programing Circle</p>
+
+</div>
+
+<hr>
+
+<div class="powered-by">
+
+<p>
+    <u id="poweredLabel">
+        This System is Powered by
+    </u>
+</p>
+
+<h1>Google</h1>
+
+</div>
+
+<div class="github">
+
+<h1 id="githubTitle">
+    Git-Hub
+</h1>
+
+</div>
+
+<div class="nexus-section">
+
+<h1>NEXUS</h1>
+
+<p id="devNexusDescription">
+    Networked EXchange &amp; Unified Search
+</p>
+
+</div>
 
 
 <div class="version-label">
@@ -206,7 +285,7 @@ GF-02
 
 </div>
 
-<script src="script.js"></script>
+<script src="script.js?v=dev-japanese-translation"></script>
 
 <script>
 
