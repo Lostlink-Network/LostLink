@@ -662,6 +662,7 @@ async function searchItem() {
         }
 
         async function requestTranslation(text, target) {
+            window.translationDebug?.("FETCH TEST VERSION 2 - CORS + NO CACHE");
             const url =
                 "https://translate.googleapis.com/translate_a/single" +
                 `?client=gtx&sl=auto&tl=${target}&dt=t&q=` +
