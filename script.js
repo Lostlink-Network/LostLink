@@ -583,7 +583,108 @@ async function searchItem() {
         // SHARED TRANSLATION SYSTEM - EN / JP
         // ========================================
 
-        const translationCache = {};
+        const translationCache = new Map();
+        const pendingTranslations = new Map();
+        const translationRequestQueue = [];
+        const MAX_TRANSLATION_REQUESTS = 3;
+        let activeTranslationRequests = 0;
+
+        async function fetchTranslationWithLimit(url) {
+            if (activeTranslationRequests >= MAX_TRANSLATION_REQUESTS) {
+                await new Promise(resolve => {
+                    translationRequestQueue.push(resolve);
+                });
+            } else {
+                activeTranslationRequests += 1;
+            }
+
+            try {
+                return await fetch(url);
+            } finally {
+                const nextRequest = translationRequestQueue.shift();
+
+                if (nextRequest) {
+                    nextRequest();
+                } else {
+                    activeTranslationRequests -= 1;
+                }
+            }
+        }
+
+        function translationRetryDelay(response, attempt) {
+            const retryAfter =
+                response.headers && response.headers.get("Retry-After");
+
+            if (retryAfter) {
+                const retryAfterSeconds = Number(retryAfter);
+
+                if (Number.isFinite(retryAfterSeconds)) {
+                    return Math.min(retryAfterSeconds * 1000, 10000);
+                }
+
+                const retryAt = Date.parse(retryAfter);
+                if (Number.isFinite(retryAt)) {
+                    return Math.min(
+                        Math.max(0, retryAt - Date.now()),
+                        10000
+                    );
+                }
+            }
+
+            return 500 * (2 ** attempt);
+        }
+
+        async function requestTranslation(text, target) {
+            const url =
+                "https://translate.googleapis.com/translate_a/single" +
+                `?client=gtx&sl=auto&tl=${target}&dt=t&q=` +
+                encodeURIComponent(text);
+
+            for (let attempt = 0; attempt < 3; attempt += 1) {
+                let response;
+
+                try {
+                    response = await fetchTranslationWithLimit(url);
+                } catch (error) {
+                    if (attempt === 2) throw error;
+
+                    await new Promise(resolve =>
+                        setTimeout(resolve, 500 * (2 ** attempt))
+                    );
+                    continue;
+                }
+
+                if (response.status === 429 || response.status >= 500) {
+                    if (attempt === 2) {
+                        throw new Error(
+                            `Translation request failed: HTTP ${response.status}`
+                        );
+                    }
+
+                    await new Promise(resolve =>
+                        setTimeout(
+                            resolve,
+                            translationRetryDelay(response, attempt)
+                        )
+                    );
+                    continue;
+                }
+
+                if (!response.ok) {
+                    throw new Error(
+                        `Translation request failed: HTTP ${response.status}`
+                    );
+                }
+
+                const data = await response.json();
+
+                return Array.isArray(data[0])
+                    ? data[0].map(part => part[0] || "").join("")
+                    : "";
+            }
+
+            return "";
+        }
 
         async function translateText(text, targetLang) {
             if (!text) return text;
@@ -591,38 +692,33 @@ async function searchItem() {
             const target = targetLang.toLowerCase();
             const cacheKey = `${target}:${text}`;
 
-            if (translationCache[cacheKey]) {
-                return translationCache[cacheKey];
+            if (translationCache.has(cacheKey)) {
+                return translationCache.get(cacheKey);
             }
 
-            try {
-                const url =
-                    "https://translate.googleapis.com/translate_a/single" +
-                    `?client=gtx&sl=auto&tl=${target}&dt=t&q=` +
-                    encodeURIComponent(text);
-
-                const response = await fetch(url);
-
-                if (!response.ok) {
-                    throw new Error("Translation request failed");
-                }
-
-                const data = await response.json();
-
-                const translated = Array.isArray(data[0])
-                    ? data[0].map(part => part[0] || "").join("")
-                    : "";
-
-                if (translated) {
-                    translationCache[cacheKey] = translated;
-                    return translated;
-                }
-
-                return text;
-            } catch (error) {
-                console.warn("Translation failed:", error);
-                return text;
+            if (pendingTranslations.has(cacheKey)) {
+                return pendingTranslations.get(cacheKey);
             }
+
+            const translationPromise = requestTranslation(text, target)
+                .then(translated => {
+                    if (translated) {
+                        translationCache.set(cacheKey, translated);
+                        return translated;
+                    }
+
+                    return text;
+                })
+                .catch(error => {
+                    console.warn("Translation failed:", error);
+                    return text;
+                })
+                .finally(() => {
+                    pendingTranslations.delete(cacheKey);
+                });
+
+            pendingTranslations.set(cacheKey, translationPromise);
+            return translationPromise;
         }
 
 
