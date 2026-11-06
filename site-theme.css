@@ -227,6 +227,13 @@ button:hover {
     overflow-wrap: anywhere;
 }
 
+.item-id {
+    margin: 0;
+    color: #19386a;
+    font-size: 12px;
+    font-weight: 600;
+}
+
 #allLatestItems hr {
     display: none;
 }

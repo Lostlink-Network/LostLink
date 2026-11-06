@@ -144,6 +144,8 @@
                             cleanText(item["Item name"] ?? item.name) ||
                             "Unknown item";
 
+                        const itemId = cleanText(item.itemId);
+
                         const description =
                             cleanText(item["Descption"] ?? item.description) ||
                             "No description";
@@ -196,6 +198,9 @@
                         return `
                             <div class="search-result">
                                 <strong>${escapeHTML(displayName)}</strong>
+                                <p class="item-id">
+                                    Item ID: ${escapeHTML(itemId)}
+                                </p>
 
                                 ${photo ? `
                                     <br>
@@ -206,7 +211,7 @@
                                     >${photoLabel}</a>
                                 ` : ""}
 
-                                <br>
+                                ${photo ? "<br>" : ""}
                                 ${descriptionLabel}:
                                 ${escapeHTML(displayDescription)}
 
@@ -845,6 +850,8 @@ async function searchItem() {
                             cleanText(item.name ?? item["Item name"]) ||
                             "Unknown item";
 
+                        const itemId = cleanText(item.itemId);
+
                         const description =
                             cleanText(item.description ?? item["Descption"]) ||
                             "No description";
@@ -881,6 +888,9 @@ async function searchItem() {
                         return `
                             <div>
                                 <strong>${escapeHTML(displayName)}</strong>
+                                <p class="item-id">
+                                    Item ID: ${escapeHTML(itemId)}
+                                </p>
 
                                 ${photo ? `
                                     <br>
@@ -891,7 +901,7 @@ async function searchItem() {
                                     >${photoLabel}</a>
                                 ` : ""}
 
-                                <br>
+                                ${photo ? "<br>" : ""}
                                 ${descriptionLabel}
                                 ${escapeHTML(displayDescription)}
 
@@ -1014,6 +1024,8 @@ async function searchItem() {
                         const name =
                             cleanText(item.name) || "Unknown item";
 
+                        const itemId = cleanText(item.itemId);
+
                         const description =
                             cleanText(item.description) || "No description";
 
@@ -1067,7 +1079,10 @@ async function searchItem() {
 
                         return `
                             <div class="latest-item">
-                                <strong>${escapeHTML(displayName)}</strong><br>
+                                <strong>${escapeHTML(displayName)}</strong>
+                                <p class="item-id">
+                                    Item ID: ${escapeHTML(itemId)}
+                                </p>
 
                                 ${displayCategory ? `
                                     ${categoryLabel}
@@ -1348,6 +1363,9 @@ async function searchItem() {
                 menuReport:
                     "Report a lost/found item",
 
+                menuCollect:
+                    "Collect an item / Terminate an item",
+
                 menuLatest:
                     "View Latest Items",
 
@@ -1438,6 +1456,12 @@ async function searchItem() {
                 reportFormLink:
                     "Open Lost & Found Report Form",
 
+                colectFormLink:
+                    "Open Item Collection Form",
+
+                terminationFormLink:
+                    "Open Termination / Report Form",
+
                 feedbackTitle:
                     "Feedback",
 
@@ -1479,6 +1503,9 @@ async function searchItem() {
 
                 menuReport:
                     "落とし物を報告する",
+
+                menuCollect:
+                    "落とし物の受け取り・削除手続き",
 
                 menuLatest:
                     "報告された落とし物を閲覧する",
@@ -1569,6 +1596,12 @@ async function searchItem() {
 
                 reportFormLink:
                     "忘れ物・落とし物レポートフォームを開く",
+
+                colectFormLink:
+                    "落とし物の受け取りフォームを開く",
+
+                terminationFormLink:
+                    "削除・報告フォームを開く",
 
                 feedbackTitle:
                     "ご意見・ご感想",
