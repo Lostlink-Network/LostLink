@@ -1730,28 +1730,28 @@ async function searchItem() {
         // ========================================
 
         document.addEventListener("DOMContentLoaded", function () {
-            const title = document.getElementById("lostlinkTitle");
+            const subtitle = document.getElementById("subTitle");
             const popup = document.getElementById("debugPopup");
 
-            if (!title || !popup) return;
+            if (!subtitle || !popup) return;
 
             let clickCount = 0;
             let clickTimer;
 
-            title.addEventListener("click", function (event) {
-                event.preventDefault();
-                clickCount += 1;
-                clearTimeout(clickTimer);
-
-                if (clickCount >= 7) {
-                    popup.classList.add("active");
-                    clickCount = 0;
-                    return;
+            subtitle.addEventListener("click", function () {
+                if (clickCount === 0) {
+                    clickTimer = setTimeout(function () {
+                        clickCount = 0;
+                    }, 5000);
                 }
 
-                clickTimer = setTimeout(function () {
+                clickCount += 1;
+
+                if (clickCount >= 7) {
+                    clearTimeout(clickTimer);
+                    popup.classList.add("active");
                     clickCount = 0;
-                }, 5000);
+                }
             });
         });
 
