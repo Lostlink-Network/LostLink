@@ -4,6 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="diagnostics-config.js"></script>
+    <script src="diagnostics.js"></script>
     <title>Search - PRJ LostLink</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -83,14 +85,35 @@
            SEARCH
            ================================ */
 
-        #searchBox,
-        #categoryFilter {
+        #searchBox {
             display: block;
             width: 70%;
             max-width: 400px;
             padding: 10px;
             margin: 8px 0 14px;
             font-size: 16px;
+        }
+
+        .latest-filter {
+            display: flex;
+            align-items: flex-start;
+            flex-direction: column;
+            gap: 4px;
+            margin: 12px 0 18px;
+        }
+
+        .latest-filter label {
+            font-weight: 600;
+        }
+
+        .latest-filter select {
+            max-width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #19386A;
+            border-radius: 5px;
+            background: white;
+            color: #19386A;
+            font: inherit;
         }
 
         #searchButton {
@@ -114,6 +137,9 @@
 
         /* Box each search result */
         #results .search-result {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
             min-width: 0;
             width: 100%;
             padding: 16px;
@@ -122,6 +148,14 @@
             background: #ffffff;
             box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
             overflow-wrap: anywhere;
+        }
+
+        #results .search-result > * {
+            margin: 0;
+        }
+
+        #results .search-pagination {
+            grid-column: 1 / -1;
         }
 
         /* Hide existing separators to avoid duplicate lines */
@@ -137,6 +171,16 @@
 
         /* Mobile: one column */
         @media (max-width: 700px) {
+            .latest-filter {
+                align-items: flex-start;
+            }
+
+            .latest-filter select {
+                width: min(100%, 400px);
+                max-width: 100%;
+                min-width: 220px;
+            }
+
             #results {
                 grid-template-columns: minmax(0, 1fr) !important;
                 column-gap: 0;
@@ -209,24 +253,26 @@
             placeholder="Enter item name"
         >
 
-        <label for="categoryFilter" id="categoryLabel">
-            Category (Optional):
-        </label>
+        <div class="latest-filter">
+            <label for="categoryFilter" id="categoryLabel">
+                Category:
+            </label>
 
-        <select id="categoryFilter" onchange="searchItem()">
+            <select id="categoryFilter" onchange="searchItem()">
             <option value="all">All Categories</option>
-            <option value="Stationery">Stationery (文房具)</option>
-            <option value="Electronics">Electronics (電子機器)</option>
-            <option value="School Supplies">School Supplies (学用品)</option>
-            <option value="Bags &amp; Pouches">Bags &amp; Pouches (バッグ・ポーチ)</option>
-            <option value="Clothing &amp; Uniforms">Clothing &amp; Uniforms (衣類・制服)</option>
-            <option value="Everyday Items">Everyday Items (日用品)</option>
-            <option value="Wallets &amp; Cards">Wallets &amp; Cards (財布・カード)</option>
-            <option value="Keys">Keys (鍵)</option>
-            <option value="Accessories">Accessories (小物・アクセサリー)</option>
-            <option value="Sports Equipment">Sports Equipment (運動用具)</option>
-            <option value="Other">Other (その他)</option>
-        </select>
+            <option value="Stationery">Stationery</option>
+            <option value="Electronics">Electronics</option>
+            <option value="School Supplies">School Supplies</option>
+            <option value="Bags & Pouches">Bags &amp; Pouches</option>
+            <option value="Clothing & Uniforms">Clothing &amp; Uniforms</option>
+            <option value="Everyday Items">Everyday Items</option>
+            <option value="Wallets & Cards">Wallets &amp; Cards</option>
+            <option value="Keys">Keys</option>
+            <option value="Accessories">Accessories</option>
+            <option value="Sports Equipment">Sports Equipment</option>
+            <option value="Other">Other</option>
+            </select>
+        </div>
 
         <button
             type="submit"

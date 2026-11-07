@@ -1,0 +1,270 @@
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: auto;
+  overflow-anchor: none;
+}
+
+body {
+  margin: 0;
+  padding: 16px;
+  width: 100%;
+  overflow-x: hidden;
+  background: white;
+  color: black;
+  font: 16px/1.4 Arial, sans-serif;
+}
+
+h1 {
+  margin: 0;
+}
+
+h2 {
+  margin: 14px 0 6px;
+}
+
+p {
+  margin: 6px 0;
+}
+
+hr {
+  margin: 10px 0;
+}
+
+.shell {
+  width: 100%;
+}
+
+.top,
+.section-head,
+.footer,
+.actions,
+.input-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.top,
+.section-head {
+  flex-wrap: wrap;
+}
+
+.eyebrow {
+  margin: 0 0 4px;
+}
+
+.muted,
+.hint,
+.privacy,
+.footer {
+  color: #555;
+}
+
+.hint,
+.privacy,
+.footer {
+  font-size: 13px;
+}
+
+.grid {
+  display: grid;
+  gap: 8px 20px;
+}
+
+.stats {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin: 12px 0;
+}
+
+.two {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.panel {
+  min-width: 0;
+  padding: 8px 0;
+  border-bottom: 1px solid #999;
+}
+
+.stat span {
+  display: block;
+}
+
+.stat strong {
+  display: block;
+  margin-top: 2px;
+  font-size: 22px;
+}
+
+.section-head {
+  margin-bottom: 8px;
+}
+
+label {
+  display: block;
+  margin: 8px 0 4px;
+  font-weight: bold;
+}
+
+input {
+  min-width: 0;
+  flex: 1;
+  padding: 8px;
+  font: inherit;
+}
+
+button {
+  padding: 7px 10px;
+  font: inherit;
+  cursor: pointer;
+}
+
+.pill,
+.status {
+  display: inline-block;
+  padding: 2px 6px;
+  border: 1px solid #888;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.good,
+.pass {
+  color: #126b38;
+}
+
+.bad,
+.fail {
+  color: #a11;
+}
+
+.warn {
+  color: #795800;
+}
+
+.test-list {
+  margin-top: 8px;
+}
+
+.test-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 0;
+  border-top: 1px solid #ccc;
+}
+
+.test-row small {
+  display: block;
+  margin-top: 2px;
+  overflow-wrap: anywhere;
+}
+
+.details {
+  margin: 0;
+}
+
+.detail-row {
+  display: grid;
+  grid-template-columns: minmax(105px, 0.8fr) 1.2fr;
+  gap: 12px;
+  padding: 5px 0;
+  border-top: 1px solid #ccc;
+}
+
+.detail-row dt {
+  color: #555;
+}
+
+.detail-row dd {
+  margin: 0;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+th,
+td {
+  padding: 6px;
+  border-bottom: 1px solid #ccc;
+  text-align: left;
+  vertical-align: top;
+}
+
+.url-cell {
+  max-width: 330px;
+  overflow-wrap: anywhere;
+}
+
+.log-list {
+  display: grid;
+  gap: 6px;
+  max-height: 380px;
+  overflow: auto;
+}
+
+.error-entry {
+  padding: 6px 0;
+  border-bottom: 1px solid #ccc;
+}
+
+.error-entry div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.error-entry time,
+.error-entry small {
+  color: #555;
+  font-size: 12px;
+}
+
+.error-entry p {
+  overflow-wrap: anywhere;
+}
+
+.empty {
+  color: #555;
+  padding: 8px 0;
+}
+
+.footer {
+  flex-wrap: wrap;
+  margin-top: 12px;
+  padding-top: 8px;
+  border-top: 1px solid #999;
+}
+
+@media (max-width: 600px) {
+  body {
+    padding: 12px;
+  }
+
+  .stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .two {
+    grid-template-columns: 1fr;
+  }
+
+  .input-row {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}

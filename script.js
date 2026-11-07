@@ -113,6 +113,8 @@
         let lastSearchResults = null;
         let searchRequestId = 0;
         let searchRenderId = 0;
+        let searchCurrentPage = 1;
+        const SEARCH_ITEMS_PER_PAGE = 10;
 
         // Render search results in the selected language.
 
@@ -132,6 +134,20 @@
                 return;
             }
 
+            const totalPages = Math.max(
+                1,
+                Math.ceil(results.length / SEARCH_ITEMS_PER_PAGE)
+            );
+            searchCurrentPage = Math.max(
+                1,
+                Math.min(searchCurrentPage, totalPages)
+            );
+            const startIndex = (searchCurrentPage - 1) * SEARCH_ITEMS_PER_PAGE;
+            const pageResults = results.slice(
+                startIndex,
+                startIndex + SEARCH_ITEMS_PER_PAGE
+            );
+
             resultsBox.textContent =
                 renderLanguage === "JP"
                     ? "検索結果を読み込み中..."
@@ -139,7 +155,7 @@
 
             try {
                 const renderedResults = await Promise.all(
-                    results.map(async (item, index) => {
+                    pageResults.map(async item => {
                         const name =
                             cleanText(item["Item name"] ?? item.name) ||
                             "Unknown item";
@@ -195,39 +211,20 @@
                         const photoLabel =
                             renderLanguage === "JP" ? "写真を見る" : "View Photo";
 
-                        return `
-                            <div class="search-result">
-                                <strong>${escapeHTML(displayName)}</strong>
-                                <p class="item-id">
-                                    Item ID: ${escapeHTML(itemId)}
-                                </p>
+                        const photoLink = photo
+                            ? `<a href="${escapeHTML(photo)}" target="_blank" rel="noopener noreferrer">${photoLabel}</a>`
+                            : "";
 
-                                ${photo ? `
-                                    <br>
-                                    <a
-                                        href="${escapeHTML(photo)}"
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                    >${photoLabel}</a>
-                                ` : ""}
-
-                                ${photo ? "<br>" : ""}
-                                ${descriptionLabel}:
-                                ${escapeHTML(displayDescription)}
-
-                                <br>
-                                ${locationLabel}:
-                                ${escapeHTML(displayLocation)}
-
-                                <br>
-                                ${dateLabel}:
-                                ${escapeHTML(date)}
-
-                                ${index < results.length - 1
-                                    ? '<hr class="result-separator">'
-                                    : ""}
-                            </div>
-                        `;
+                        return [
+                            '<div class="search-result">',
+                            `<strong>${escapeHTML(displayName)}</strong>`,
+                            `<p class="item-id">Item ID: ${escapeHTML(itemId)}</p>`,
+                            photoLink,
+                            `<p class="search-result-detail">${descriptionLabel}: ${escapeHTML(displayDescription)}</p>`,
+                            `<p class="search-result-detail">${locationLabel}: ${escapeHTML(displayLocation)}</p>`,
+                            `<p class="search-result-detail">${dateLabel}: ${escapeHTML(date)}</p>`,
+                            "</div>"
+                        ].join("");
                     })
                 );
 
@@ -238,7 +235,60 @@
                     return;
                 }
 
-                resultsBox.innerHTML = renderedResults.join("");
+                let pagination = "";
+                if (totalPages > 1) {
+                    const previousLabel =
+                        renderLanguage === "JP" ? "前へ" : "Previous";
+                    const nextLabel =
+                        renderLanguage === "JP" ? "次へ" : "Next";
+                    const pageLabel = renderLanguage === "JP"
+                        ? `${searchCurrentPage} / ${totalPages} ページ`
+                        : `Page ${searchCurrentPage} of ${totalPages}`;
+                    const pageButtons = Array.from(
+                        { length: totalPages },
+                        (_, index) => {
+                            const page = index + 1;
+                            return page === searchCurrentPage
+                                ? `<span aria-current="page" aria-label="Page ${page}">${page}</span>`
+                                : `<button type="button" aria-label="Page ${page}" onclick="showSearchPage(${page})">${page}</button>`;
+                        }
+                    ).join("");
+                    pagination = `
+                        <div class="search-pagination" style="
+                            display: flex;
+                            justify-content: center;
+                            align-items: center;
+                            flex-wrap: wrap;
+                            gap: 12px;
+                            width: 100%;
+                            margin: 25px auto;
+                            text-align: center;
+                        ">
+                            ${searchCurrentPage > 1 ? `
+                                <button
+                                    type="button"
+                                    onclick="showSearchPage(${searchCurrentPage - 1})"
+                                >
+                                    ${previousLabel}
+                                </button>
+                            ` : ""}
+
+                            <span style="white-space: nowrap;">${pageLabel}</span>
+                            ${pageButtons}
+
+                            ${searchCurrentPage < totalPages ? `
+                                <button
+                                    type="button"
+                                    onclick="showSearchPage(${searchCurrentPage + 1})"
+                                >
+                                    ${nextLabel}
+                                </button>
+                            ` : ""}
+                        </div>
+                    `;
+                }
+
+                resultsBox.innerHTML = renderedResults.join("") + pagination;
 
             } catch (error) {
                 console.error("Rendering search results failed:", error);
@@ -260,6 +310,20 @@
         function refreshSearchResultsLanguage() {
             if (!Array.isArray(lastSearchResults)) return;
 
+            renderSearchResults(lastSearchResults);
+        }
+
+        function showSearchPage(page) {
+            if (!Array.isArray(lastSearchResults)) return;
+
+            const totalPages = Math.max(
+                1,
+                Math.ceil(lastSearchResults.length / SEARCH_ITEMS_PER_PAGE)
+            );
+            searchCurrentPage = Math.max(
+                1,
+                Math.min(Number(page) || 1, totalPages)
+            );
             renderSearchResults(lastSearchResults);
         }
 
@@ -287,6 +351,7 @@ async function searchItem() {
         : "all";
 
     const currentRequestId = ++searchRequestId;
+    searchCurrentPage = 1;
 
     if (!keyword && category === "all") {
         lastSearchResults = null;
@@ -367,6 +432,7 @@ async function searchItem() {
         }
 
         lastSearchResults = results;
+        searchCurrentPage = 1;
         await renderSearchResults(results);
 
     } catch (error) {
@@ -949,7 +1015,7 @@ async function searchItem() {
             const container = document.getElementById("allLatestItems");
             if (!container) return;
 
-            const ITEMS_PER_PAGE = 20;
+            const ITEMS_PER_PAGE = 10;
             const renderLanguage = language;
             const categoryFilter =
                 document.getElementById("latestCategoryFilter")?.value || "";
@@ -1478,7 +1544,7 @@ async function searchItem() {
                     "Search",
 
                 categoryLabel:
-                    "Category (Optional):",
+                    "Category:",
 
                 searchButton:
                     "Search",
@@ -1619,7 +1685,7 @@ async function searchItem() {
                     "検索",
 
                 categoryLabel:
-                    "カテゴリー (任意):",
+                    "カテゴリー:",
 
                 searchButton:
                     "検索する",
@@ -1673,11 +1739,15 @@ async function searchItem() {
 
         function updateLatestCategoryFilterLanguage() {
             const label = document.getElementById("categoryFilterLabel");
-            const select = document.getElementById("latestCategoryFilter");
-            if (!label || !select) return;
+            const selects = [
+                document.getElementById("latestCategoryFilter"),
+                document.getElementById("categoryFilter")
+            ].filter(Boolean);
+            if (!selects.length) return;
 
             const categoryLabels = {
                 "": ["All Categories", "すべてのカテゴリー"],
+                "all": ["All Categories", "すべてのカテゴリー"],
                 "Stationery": ["Stationery", "文房具"],
                 "Electronics": ["Electronics", "電子機器"],
                 "School Supplies": ["School Supplies", "学用品"],
@@ -1692,10 +1762,14 @@ async function searchItem() {
             };
             const labelIndex = language === "JP" ? 1 : 0;
 
-            label.textContent = language === "JP" ? "カテゴリー:" : "Category:";
-            Array.from(select.options).forEach(option => {
-                const labels = categoryLabels[option.value];
-                if (labels) option.textContent = labels[labelIndex];
+            if (label) {
+                label.textContent = language === "JP" ? "カテゴリー:" : "Category:";
+            }
+            selects.forEach(select => {
+                Array.from(select.options).forEach(option => {
+                    const labels = categoryLabels[option.value];
+                    if (labels) option.textContent = labels[labelIndex];
+                });
             });
         }
 

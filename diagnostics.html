@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>LostLink Internal Diagnostics</title>
+  <link rel="stylesheet" href="diagnostics.css">
+  <script src="diagnostics-config.js"></script>
+  <script defer src="diagnostics.js"></script>
+</head>
+<body>
+  <main class="shell">
+    <header class="top">
+      <div>
+        <p class="eyebrow">LOSTLINK / INTERNAL TOOLS</p>
+        <h1>System diagnostics</h1>
+        <p><a id="pageTitle" href="index.html">LostLink NTW</a></div></p>
+        <p class="muted">Local browser diagnostics. Tests run only when you request them.</p>
+      </div>
+      <span class="pill" id="overallStatus">NOT TESTED</span>
+    </header>
+
+    <section class="grid stats" aria-label="Diagnostic summary">
+      <article class="panel stat"><span>Network events</span><strong id="networkCount">0</strong></article>
+      <article class="panel stat"><span>Captured errors</span><strong id="errorCount">0</strong></article>
+      <article class="panel stat"><span>Failed images</span><strong id="imageCount">0</strong></article>
+      <article class="panel stat"><span>Page load</span><strong id="loadTime">—</strong></article>
+    </section>
+
+    <section class="panel">
+      <div class="section-head">
+        <div><h2>Connection tests</h2><p class="muted">Enter your deployed Apps Script web-app URL once. It is saved only in this browser.</p></div>
+        <button id="runTests" class="primary">Run all tests</button>
+      </div>
+      <label for="apiUrl">Google Apps Script API URL</label>
+      <div class="input-row">
+        <input id="apiUrl" type="url" placeholder="https://script.google.com/macros/s/.../exec" autocomplete="off">
+        <button id="saveApi">Save URL</button>
+      </div>
+      <p class="hint">The URL is stored locally. Do not enter passwords, tokens, or private credentials.</p>
+      <div id="testResults" class="test-list">
+        <div class="test-row"><span>Same-origin page</span><span class="status neutral">Not run</span></div>
+        <div class="test-row"><span>Apps Script latest endpoint</span><span class="status neutral">Not run</span></div>
+        <div class="test-row"><span>Apps Script search endpoint</span><span class="status neutral">Not run</span></div>
+        <div class="test-row"><span>Translation endpoint</span><span class="status neutral">Not run</span></div>
+      </div>
+    </section>
+
+    <section class="grid two">
+      <article class="panel">
+        <div class="section-head"><div><h2>Browser & device</h2><p class="muted">Basic environment information.</p></div></div>
+        <dl id="browserInfo" class="details"></dl>
+      </article>
+      <article class="panel">
+        <div class="section-head"><div><h2>Page health</h2><p class="muted">Fetches and inspects a selected LostLink page on the same website.</p></div></div>
+        <label for="pagePath">Page to inspect (same website)</label>
+        <div class="input-row">
+          <input id="pagePath" type="text" value="/index.html" placeholder="/index.html">
+          <button id="checkPage">Check page</button>
+        </div>
+        <div id="pageResults" class="test-list"><p class="muted">Run the page check to inspect the selected page's HTML and images.</p></div>
+      </article>
+    </section>
+
+    <section class="panel">
+      <div class="section-head">
+        <div><h2>Network log</h2><p class="muted">Fetch/XHR requests made after the diagnostic engine loads.</p></div>
+        <button id="clearLogs" class="quiet">Clear logs</button>
+      </div>
+      <div class="table-wrap">
+        <table><thead><tr><th>Time</th><th>Method</th><th>Destination</th><th>Status</th><th>Duration</th></tr></thead>
+          <tbody id="networkRows"><tr><td colspan="5" class="empty">No network events recorded.</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="section-head">
+        <div><h2>Error console</h2><p class="muted">Runtime errors, rejected promises, resource failures and console.error calls.</p></div>
+        <span class="pill" id="errorBadge">0 errors</span>
+      </div>
+      <div id="errorRows" class="log-list"><p class="empty">No errors captured.</p></div>
+    </section>
+
+    <section class="panel">
+      <div class="section-head"><div><h2>Performance</h2><p class="muted">Navigation timing from the current page.</p></div><button id="refreshPerformance">Refresh</button></div>
+      <div id="performanceInfo" class="details"></div>
+    </section>
+
+    <footer class="footer">
+      <span>LL-DIAG V1 · Browser-local storage</span>
+      <div class="actions">
+        <button id="exportJson" class="primary">Export JSON</button>
+        <button id="exportTxt">Export TXT</button>
+      </div>
+    </footer>
+    <p class="privacy">Privacy: logs stay in this browser. Query strings are removed from recorded request URLs. Avoid recording or exporting personal data. This hidden page is not an authentication system.</p>
+  </main>
+</body>
+</html>
