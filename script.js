@@ -1457,25 +1457,25 @@ async function searchItem() {
                     "System Description",
 
                 devTagline:
-                    "Lost, Found, Reconnected.",
+                    "Lost, Found, Reconnected",
 
                 devPrivacyTitle:
-                    "Here LostLink, We value your Privacy and Security",
+                    "Cybersecurity",
 
                 devPrivacyDescription:
-                    "We Protect Your Privacy and Ensure the Security of Your Data",
+                    "We value your Privacy and Ensure the Security of Your Data",
 
                 devDataDescription:
                     "We ensure we take no personal data from you and your device",
 
                 devDescriptionTitle:
-                    "Description of the system",
+                    "System Infomation",
 
                 devDescriptionText:
-                    "We are a student lost and found system designed to help students locate their lost items and reconnect with them.",
+                    "This is a student lost and found system designed to help students locate their lost items and reconnect with them.",
 
                 devThanksText:
-                    "This system was created with help of NEXUS. Thankyou very much for your support.",
+                    "This system is Co-Developed with Nexus(Self Developing AI). Thanks",
 
                 creatorLabel:
                     "Creator and Maintainer (Nickname):",
@@ -1496,7 +1496,7 @@ async function searchItem() {
                     "Git-Hub",
 
                 devNexusDescription:
-                    "Networked EXchange & Unified Search",
+                    "Non-Exposed Xfer & Unified Security",
 
                 warningText:
                     "WARNING: This system tend to have technical errors with Google Chrome (MOBILE).",
@@ -1536,6 +1536,9 @@ async function searchItem() {
 
                 feedbackFormLink:
                     "Open Feedback Form",
+                
+                userGuide:
+                    "User Guide",
 
                 backHomeLink:
                     "Back to Home",
@@ -1553,7 +1556,22 @@ async function searchItem() {
                     "Enter item name, description, or location",
 
                 searchResultsDefault:
-                    "Enter a search term above."
+                    "Enter a search term above.",
+
+                uglink:
+                    "User Guide (PDF)",
+
+                qalink:
+                    "Common Q&A (PDF)",
+
+                guidefile1:
+                    "User Guide (PDF):",
+
+                guidefile2:
+                    "Common Q&A (PDF):",
+
+                guideDescription:
+                    "Welcome to LostLink. A network of lost and found items. The following documents provide guidance on how to use the system effectively.",
             },
 
             JP: {
@@ -1598,13 +1616,13 @@ async function searchItem() {
                     "システム詳細",
 
                 devTagline:
-                    "Lost, Found, Reconnected.",
+                    "Lost, Found, Reconnected",
 
                 devPrivacyTitle:
-                    "LostLinkは皆様のプライバシーと安全を大切にしています",
+                    "サイバーセキュリティ",
 
                 devPrivacyDescription:
-                    "皆様のプライバシーを守り、データの安全を確保します。",
+                    "LostLinkはお客様のプライバシーを尊重し、データのセキュリティを確保いたします。",
 
                 devDataDescription:
                     "皆様やお使いの端末から個人情報を取得することはありません。",
@@ -1616,7 +1634,7 @@ async function searchItem() {
                     "LostLinkは、学生が落とし物を探し、持ち主のもとへ返すための学生向け落とし物サービスです。",
 
                 devThanksText:
-                    "このシステムはNEXUSの協力により制作されました。ご支援に心より感謝いたします。",
+                    "このシステムは、Nexus（独自開発のAI）と共同開発されたものです。Thanks",
 
                 creatorLabel:
                     "制作者・管理者（ニックネーム）：",
@@ -1637,7 +1655,7 @@ async function searchItem() {
                     "GitHub",
 
                 devNexusDescription:
-                    "ネットワーク型の交換・統合検索システム",
+                    "Non-Exposed Xfer & Unified Security",
 
                 warningText:
                     "警告：このシステムはGoogle Chrome（モバイル）で技術的なエラーが発生します。",
@@ -1678,6 +1696,9 @@ async function searchItem() {
                 feedbackFormLink:
                     "フィードバックフォームを開く",
 
+                userGuide:
+                    "ユーザーガイド",
+
                 backHomeLink:
                     "ホームに戻る",
 
@@ -1694,7 +1715,22 @@ async function searchItem() {
                     "アイテム名、説明、または場所を入力してください",
 
                 searchResultsDefault:
-                    "上に検索語を入力してください。"
+                    "上に検索語を入力してください。",
+
+                qalink:
+                    "よくある質問（PDF）",
+
+                uglink:
+                    "ユーザーガイド（PDF）",
+
+                guidefile1:
+                    "ユーザーガイド（PDF）：",
+
+                guidefile2:
+                    "よくある質問（PDF）：",   
+
+                guideDescription:
+                    "LostLinkへようこそ。落とし物のネットワークです。以下のドキュメントは、システムを効果的に使用するためのガイダンスを提供します。"
             }
         };
 

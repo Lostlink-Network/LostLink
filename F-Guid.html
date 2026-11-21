@@ -1,0 +1,102 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <script src="diagnostics-config.js"></script>
+    <script src="diagnostics.js"></script>
+
+    <title>User Guide - LostLink NTW</title>
+
+    <link rel="icon" type="image/png" href="documents/light.png" media="(prefers-color-scheme: light)">
+    <link rel="icon" type="image/png" href="documents/dark.png" media="(prefers-color-scheme: dark)">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="site-theme.css">
+</head>
+
+<body>
+
+    <header class="top-bar">
+        <div class="nexus">
+            <h1>
+                <a id="pageTitle" href="index.html">LostLink NTW</a>
+            </h1>
+            <p id="subTitle">Student Lost &amp; Found System</p>
+        </div>
+
+        <div class="language-box" aria-label="Language selection">
+            <button
+                type="button"
+                id="enButton"
+                onclick="setLanguage('EN')"
+                aria-label="Switch to English">
+                EN
+            </button>
+
+            <button
+                type="button"
+                id="jpButton"
+                onclick="setLanguage('JP')"
+                aria-label="日本語に切り替え">
+                JP
+            </button>
+        </div>
+    </header>
+
+    <hr>
+
+    <main>
+
+        <h2 id="guideTitle">User Guide</h2>
+
+        <p id="guideDescription">
+            Welcome to LostLink. A network of lost and found items.
+            The following documents provide guidance on how to use
+            the system effectively.
+        </p>
+
+        <hr>
+
+        <section>
+            <p id="guidefile1">User Guide:</p>
+
+            <a
+                class="nav-button"
+                id="uglink"
+                href="documents/Untitled document (2)-compressed.pdfgit"
+                target="_blank"
+                rel="noopener noreferrer">
+                User Guide (PDF)
+            </a>
+        </section>
+
+        <section>
+            <p id="guidefile2">Expected Q&A:</p>
+
+            <a
+                class="nav-button"
+                id="qalink"
+                href="documents/LostLink%20NTW%20-%20Q%26A.pdf"
+                target="_blank"
+                rel="noopener noreferrer">
+                Common Q&A (PDF)
+            </a>
+        </section>
+
+    </main>
+
+    <footer class="version-label">
+        GF-05
+    </footer>
+
+    <script src="script.js"></script>
+
+</body>
+</html>
