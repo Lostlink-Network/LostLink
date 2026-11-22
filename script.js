@@ -1418,7 +1418,7 @@ async function searchItem() {
             EN: {
 
                 subTitle:
-                    "Student Lost & Found System",
+                    "Lost Item Management System",
 
                 menuTitle:
                     "Menu",
@@ -1572,12 +1572,14 @@ async function searchItem() {
 
                 guideDescription:
                     "Welcome to LostLink. A network of lost and found items. The following documents provide guidance on how to use the system effectively.",
-            },
+
+                },
+
 
             JP: {
 
                 subTitle:
-                    "生徒 忘れ物・落とし物システム",
+                    "落とし物総合管理システム",
 
                 menuTitle:
                     "メニュー",
@@ -1730,8 +1732,12 @@ async function searchItem() {
                     "よくある質問（PDF）：",   
 
                 guideDescription:
-                    "LostLinkへようこそ。落とし物のネットワークです。以下のPDFは、システムを効果的に使用するためのガイダンスを提供します。"
-            }
+                    "LostLinkへようこそ。落とし物のネットワークです。以下のPDFは、システムを効果的に使用するためのガイダンスを提供します。",
+           
+                systemupdateLink:
+                    "最新アップデートの情報",
+
+                }
         };
 
 
