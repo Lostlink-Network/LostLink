@@ -1571,7 +1571,7 @@ async function searchItem() {
                     "Common Q&A (PDF):",
 
                 guideDescription:
-                    "Welcome to LostLink. A network of lost and found items. The following documents provide guidance on how to use the system effectively.",
+                    "Welcome to LostLink.　Network of lost and found items. The following documents provide guidance on how to use the system effectively.",
 
                 },
 
