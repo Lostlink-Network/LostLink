@@ -1,0 +1,415 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#000000">
+<title>Clock</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Saira:wght@400&display=swap" rel="stylesheet">
+<style>
+
+    /* Adjust these values to change the clock's position and appearance. */
+
+    :root {
+
+      --background: #000;
+
+      --clock-color: #f5f5f5;
+
+      --date-color: #888;
+
+      --clock-size: clamp(3rem, 11vw, 8rem);
+
+      --date-size: clamp(0.9rem, 2vw, 1.15rem);
+
+      --quote-size: clamp(1rem, 2.2vw, 1.35rem);
+
+      --clock-offset-x: 0px;
+
+      --clock-offset-y: 0px;
+
+      --date-gap: 1rem;
+
+      --quote-bottom: 1.5rem;
+
+      --quote-color: #c8c8c8;
+
+      --quote-author-color: #888;
+
+    }
+ 
+    * {
+
+      box-sizing: border-box;
+
+    }
+ 
+    html,
+
+    body {
+
+      width: 100%;
+
+      min-height: 100%;
+
+      margin: 0;
+
+    }
+ 
+    body {
+
+      min-height: 100vh;
+
+      overflow: hidden;
+
+      background: var(--background);
+
+      color: var(--clock-color);
+
+      font-family: "Saira", sans-serif;
+
+      touch-action: manipulation;
+
+    }
+ 
+    .clock-stack {
+
+      position: absolute;
+
+      top: calc(50% + var(--clock-offset-y));
+
+      left: calc(50% + var(--clock-offset-x));
+
+      display: flex;
+
+      flex-direction: column;
+
+      align-items: center;
+
+      width: min(92vw, 60rem);
+
+      transform: translate(-50%, -50%);
+
+      text-align: center;
+
+    }
+ 
+    .time {
+
+      font-size: var(--clock-size);
+
+      font-variant-numeric: tabular-nums;
+
+      font-weight: 400;
+
+      letter-spacing: 0.04em;
+
+      line-height: 1;
+
+      white-space: nowrap;
+
+    }
+ 
+    .date {
+
+      margin-top: var(--date-gap);
+
+      color: var(--date-color);
+
+      font-size: var(--date-size);
+
+      letter-spacing: 0.12em;
+
+    }
+ 
+    .quote {
+
+      position: fixed;
+
+      bottom: calc(var(--quote-bottom) + env(safe-area-inset-bottom, 0px));
+
+      left: 0;
+
+      width: 100%;
+
+      overflow-x: auto;
+
+      scrollbar-width: none;
+
+    }
+ 
+    .quote-text {
+
+      width: max-content;
+
+      margin: 0 auto;
+
+      padding: 0 1rem;
+
+      color: var(--quote-color);
+
+      font-size: var(--quote-size);
+
+      line-height: 1.4;
+
+      white-space: nowrap;
+
+    }
+ 
+    .quote-author {
+
+      display: inline;
+
+      margin-left: 0.55em;
+
+      color: var(--quote-author-color);
+
+      font-size: var(--date-size);
+
+    }
+ 
+    .quote-author::before {
+
+      content: "— ";
+
+    }
+ 
+    .quote::-webkit-scrollbar {
+
+      display: none;
+
+    }
+ 
+    @media (orientation: landscape) and (min-width: 768px) and (max-width: 1100px) {
+
+      :root {
+
+        --clock-size: clamp(4.5rem, 10vw, 6.5rem);
+
+        --date-size: 1rem;
+
+        --quote-size: 0.95rem;
+
+        --quote-bottom: 1rem;
+
+      }
+
+    }
+</style>
+</head>
+<body>
+<main class="clock-stack" aria-label="Local time and date">
+<time class="time" id="clock" aria-label="Current local time"></time>
+<time class="date" id="date"></time>
+</main>
+<footer class="quote" aria-live="polite">
+<p class="quote-text" id="quote-text"><span id="quote-content"></span><span class="quote-author" id="quote-author"></span></p>
+</footer>
+ 
+  <script>
+
+    const clockElement = document.getElementById("clock");
+
+    const dateElement = document.getElementById("date");
+
+    const quoteTextElement = document.getElementById("quote-content");
+
+    const quoteAuthorElement = document.getElementById("quote-author");
+ 
+    const quotes = [
+
+      {
+
+        text: "“We must all suffer one of two things: the pain of discipline or the pain of regret.”",
+
+        author: "Jim Rohn"
+
+      },
+
+      {
+
+        text: "“Don’t look back—you’re not going that way.”",
+
+        author: "Mary Engelbreit"
+
+      },
+
+      {
+
+        text: "“In the end, we only regret the chances we didn’t take.”",
+
+        author: "Lewis Carroll"
+
+      },
+
+      {
+
+        text: "“Kōkai saki ni tatazu”\nRegret never stands ahead.",
+
+        author: "Japanese proverb"
+
+      },
+
+      {
+
+        text: "“We must embrace pain and burn it as fuel for our journey.”",
+
+        author: "Kenji Miyazawa"
+
+      },
+
+      {
+
+        text: "“Believe you can and you're halfway there.”",
+
+        author: "Theodore Roosevelt"
+
+      },
+
+      {
+
+        text: "“Success is not final, failure is not fatal: it is the courage to continue that counts.”",
+
+        author: "Winston Churchill"
+
+      },
+
+      {
+
+        text: "“Life is like riding a bicycle. To keep your balance, you must keep moving.”",
+
+        author: "Albert Einstein"
+
+      },
+
+      {
+
+        text: "“It always seems impossible until it's done.”",
+
+        author: "Nelson Mandela"
+
+      },
+
+      {
+
+        text: "“A journey of a thousand miles begins with a single step.”",
+
+        author: "Lao Tzu"
+
+      }
+
+    ];
+ 
+    const quoteInterval = 10 * 60 * 1000;
+ 
+    const timeFormatter = new Intl.DateTimeFormat(undefined, {
+
+      hour: "2-digit",
+
+      minute: "2-digit",
+
+      second: "2-digit",
+
+      hourCycle: "h23"
+
+    });
+ 
+    const dateFormatter = new Intl.DateTimeFormat(undefined, {
+
+      weekday: "long",
+
+      year: "numeric",
+
+      month: "long",
+
+      day: "numeric"
+
+    });
+ 
+    function updateClock() {
+
+      const now = new Date();
+
+      clockElement.dateTime = now.toISOString();
+
+      clockElement.textContent = timeFormatter.format(now);
+
+      dateElement.dateTime = now.toISOString().slice(0, 10);
+
+      dateElement.textContent = dateFormatter.format(now);
+
+    }
+ 
+    function updateQuote() {
+
+      const now = Date.now();
+
+      const intervalIndex = Math.floor(now / quoteInterval);
+
+      const quote = quotes[intervalIndex % quotes.length];
+ 
+      quoteTextElement.textContent = quote.text;
+
+      quoteAuthorElement.textContent = quote.author;
+ 
+      window.setTimeout(updateQuote, quoteInterval - (now % quoteInterval));
+
+    }
+ 
+    function toggleFullscreen() {
+
+      const root = document.documentElement;
+
+      const isFullscreen = document.fullscreenElement || document.webkitFullscreenElement;
+
+      const action = isFullscreen
+
+        ? document.exitFullscreen || document.webkitExitFullscreen
+
+        : root.requestFullscreen || root.webkitRequestFullscreen;
+
+      const target = isFullscreen ? document : root;
+ 
+      if (!action) {
+
+        console.warn("Fullscreen mode is not supported by this browser.");
+
+        return;
+
+      }
+ 
+      const result = action.call(target);
+
+      if (result && typeof result.catch === "function") {
+
+        result.catch(error => console.error("Could not change fullscreen mode:", error));
+
+      }
+
+    }
+ 
+    updateClock();
+
+    window.setInterval(updateClock, 1000);
+
+    updateQuote();
+ 
+    document.addEventListener("dblclick", toggleFullscreen);
+
+    document.addEventListener("keydown", event => {
+
+      if (event.key.toLowerCase() === "f" && !event.altKey && !event.ctrlKey && !event.metaKey) {
+
+        event.preventDefault();
+
+        toggleFullscreen();
+
+      }
+
+    });
+</script>
+</body>
+</html>
+ 
