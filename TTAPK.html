@@ -2,9 +2,12 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#000000">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Clock</title>
+<link rel="manifest" href="./TTAPK-manifest.json">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Saira:wght@400&display=swap" rel="stylesheet">
@@ -39,6 +42,10 @@
       --quote-author-color: #888;
 
     }
+
+    :root {
+      color-scheme: dark;
+    }
  
     * {
 
@@ -61,15 +68,11 @@
     body {
 
       min-height: 100vh;
-
+      min-height: 100svh;
       overflow: hidden;
-
       background: var(--background);
-
       color: var(--clock-color);
-
       font-family: "Saira", sans-serif;
-
       touch-action: manipulation;
 
     }
@@ -78,8 +81,7 @@
 
       position: absolute;
 
-      top: calc(50% + var(--clock-offset-y));
-
+      top: calc(50% + (env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)) / 2 + var(--clock-offset-y));
       left: calc(50% + var(--clock-offset-x));
 
       display: flex;
@@ -130,14 +132,49 @@
 
       bottom: calc(var(--quote-bottom) + env(safe-area-inset-bottom, 0px));
 
-      left: 0;
+      left: env(safe-area-inset-left, 0px);
 
-      width: 100%;
-
+      width: calc(100% - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px));
       overflow-x: auto;
-
       scrollbar-width: none;
+    }
 
+    .install-hint {
+      position: fixed;
+      z-index: 1;
+      top: calc(0.75rem + env(safe-area-inset-top, 0px));
+      left: calc(0.75rem + env(safe-area-inset-left, 0px));
+      right: calc(0.75rem + env(safe-area-inset-right, 0px));
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      padding: 0.75rem 1rem;
+      border: 1px solid #444;
+      border-radius: 0.75rem;
+      background: #000;
+      color: #f5f5f5;
+      font: 0.9rem/1.4 system-ui, sans-serif;
+    }
+
+    .install-hint.is-visible {
+      display: flex;
+    }
+
+    .install-hint button {
+      flex: 0 0 auto;
+      border: 0;
+      padding: 0.25rem 0.5rem;
+      background: transparent;
+      color: inherit;
+      font: inherit;
+      cursor: pointer;
+    }
+
+    @media (display-mode: standalone) {
+      .install-hint {
+        display: none !important;
+      }
     }
  
     .quote-text {
@@ -200,6 +237,10 @@
 </style>
 </head>
 <body>
+<aside class="install-hint" id="install-hint" aria-label="Add Clock to Home Screen">
+<span>For a fullscreen experience, tap Share &gt; Add to Home Screen.</span>
+<button type="button" id="dismiss-install-hint" aria-label="Dismiss install hint">Dismiss</button>
+</aside>
 <main class="clock-stack" aria-label="Local time and date">
 <time class="time" id="clock" aria-label="Current local time"></time>
 <time class="date" id="date"></time>
@@ -215,8 +256,27 @@
     const dateElement = document.getElementById("date");
 
     const quoteTextElement = document.getElementById("quote-content");
-
     const quoteAuthorElement = document.getElementById("quote-author");
+    const installHintElement = document.getElementById("install-hint");
+    const standaloneQuery = window.matchMedia("(display-mode: standalone)");
+
+    function shouldShowInstallHint() {
+      const isStandalone = navigator.standalone === true || standaloneQuery.matches;
+      const isIPad = /iPad/.test(navigator.userAgent) ||
+        (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+      const isSafari = /Safari/.test(navigator.userAgent) &&
+        !/CriOS|FxiOS|EdgiOS|OPiOS|Chrome|Chromium|Android/.test(navigator.userAgent);
+
+      return isIPad && isSafari && !isStandalone;
+    }
+
+    if (shouldShowInstallHint()) {
+      installHintElement.classList.add("is-visible");
+    }
+
+    document.getElementById("dismiss-install-hint").addEventListener("click", () => {
+      installHintElement.classList.remove("is-visible");
+    });
  
     const quotes = [
 
