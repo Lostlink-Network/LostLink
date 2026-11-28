@@ -1571,7 +1571,7 @@ async function searchItem() {
                     "Common Q&A (PDF):",
 
                 guideDescription:
-                    "Welcome to ReFind.　Network of lost and found items. The following documents provide guidance on how to use the system effectively. Yes the thing has LostLink NTW insted of ReFind. But we want to preserve this untill the new one. We are sorry for the inconvinience.",
+                    "Welcome to ReFind.　Network of lost and found items. The following documents provide guidance on how to use the system effectively. Yes the thing has LostLink NTW insted of ReFind. But we want to preserve this untill the new one. We are sorry for the inconvenience.",
 
                 },
 
@@ -1732,7 +1732,7 @@ async function searchItem() {
                     "よくある質問（PDF）：",   
 
                 guideDescription:
-                    "ReFindへようこそ。落とし物のネットワークです。以下のPDFは、システムを効果的に使用するためのガイダンスを提供します。",
+                    "ReFindへようこそ。落とし物のネットワークです。以下のPDFは、システムを効果的に使用するためのガイダンスを提供します。現時点ではLostLink NTW から更新されていません。古いものを私たちは保存したいため保存しています。ご迷惑をおかけしてすいません。",
            
                 systemupdateLink:
                     "最新アップデートの情報",
