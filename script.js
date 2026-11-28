@@ -114,7 +114,7 @@
         let searchRequestId = 0;
         let searchRenderId = 0;
         let searchCurrentPage = 1;
-        const SEARCH_ITEMS_PER_PAGE = 10;
+        const SEARCH_ITEMS_PER_PAGE = 8;
 
         // Render search results in the selected language.
 
@@ -1015,7 +1015,7 @@ async function searchItem() {
             const container = document.getElementById("allLatestItems");
             if (!container) return;
 
-            const ITEMS_PER_PAGE = 10;
+            const ITEMS_PER_PAGE = 8;
             const renderLanguage = language;
             const categoryFilter =
                 document.getElementById("latestCategoryFilter")?.value || "";
@@ -1418,7 +1418,7 @@ async function searchItem() {
             EN: {
 
                 subTitle:
-                    "Lost Item Management System",
+                    "Ex- LostLink System",
 
                 menuTitle:
                     "Menu",
@@ -1451,7 +1451,7 @@ async function searchItem() {
                     "System History",
 
                 pageTitle:
-                    "LostLink NTW",
+                    "ReFind",
 
                 pageSubtitle:
                     "System Description",
@@ -1571,7 +1571,7 @@ async function searchItem() {
                     "Common Q&A (PDF):",
 
                 guideDescription:
-                    "Welcome to LostLink.　Network of lost and found items. The following documents provide guidance on how to use the system effectively.",
+                    "Welcome to ReFind.　Network of lost and found items. The following documents provide guidance on how to use the system effectively. Yes the thing has LostLink NTW insted of ReFind. But we want to preserve this untill the new one. We are sorry for the inconvinience.",
 
                 },
 
@@ -1612,7 +1612,7 @@ async function searchItem() {
                     "システム履歴",
 
                 pageTitle:
-                    "LostLink NTW",
+                    "ReFind",
 
                 pageSubtitle:
                     "システム詳細",
@@ -1624,7 +1624,7 @@ async function searchItem() {
                     "サイバーセキュリティ",
 
                 devPrivacyDescription:
-                    "LostLinkはお客様のプライバシーを尊重し、データのセキュリティを確保いたします。",
+                    "ReFindはお客様のプライバシーを尊重し、データのセキュリティを確保いたします。",
 
                 devDataDescription:
                     "皆様やお使いの端末から個人情報を取得することはありません。",
@@ -1633,7 +1633,7 @@ async function searchItem() {
                     "システムの説明",
 
                 devDescriptionText:
-                    "LostLinkは、学生が落とし物を探し、持ち主のもとへ返すための学生向け落とし物サービスです。",
+                    "ReFindは、学生が落とし物を探し、持ち主のもとへ返すための学生向け落とし物サービスです。",
 
                 devThanksText:
                     "このシステムは、Nexus（独自開発のAI）と共同開発されたものです。Thanks",
@@ -1732,7 +1732,7 @@ async function searchItem() {
                     "よくある質問（PDF）：",   
 
                 guideDescription:
-                    "LostLinkへようこそ。落とし物のネットワークです。以下のPDFは、システムを効果的に使用するためのガイダンスを提供します。",
+                    "ReFindへようこそ。落とし物のネットワークです。以下のPDFは、システムを効果的に使用するためのガイダンスを提供します。",
            
                 systemupdateLink:
                     "最新アップデートの情報",
